@@ -13,5 +13,4 @@ UCLASS()
 class KEEPPUSHING_API AKeepPushingGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
 };
