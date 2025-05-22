@@ -38,9 +38,6 @@ protected:
 
 	
 	float direction = 1.f; // 1 ou -1 pour aller et retour
-
-	
-	FVector currentStartPos;
 	
 	
 	float moveTimer = 0.f;

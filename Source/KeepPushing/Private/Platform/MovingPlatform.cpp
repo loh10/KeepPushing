@@ -9,8 +9,6 @@ AMovingPlatform::AMovingPlatform()
 void AMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
-
-	currentStartPos = GetActorLocation();
 }
 
 void AMovingPlatform::Tick(float DeltaTime)
@@ -38,7 +36,7 @@ void AMovingPlatform::Move(float DeltaTime)
 	float alpha = moveTimer / moveCycleDuration;
 	float sinAlpha = 0.5f * (1.f - FMath::Cos(alpha * 2 * PI));
 
-	FVector targetPos = currentStartPos;
+	FVector targetPos = startPosition;
 	switch (axisToMove)
 	{
 	case EAxisMovement::X:
@@ -52,7 +50,7 @@ void AMovingPlatform::Move(float DeltaTime)
 		break;
 	}
 
-	FVector newLocation = FMath::Lerp(currentStartPos, targetPos, sinAlpha);
+	FVector newLocation = FMath::Lerp(startPosition, targetPos, sinAlpha);
 	SetActorLocation(newLocation, true); // true pour activer le sweep (collision)
 }
 

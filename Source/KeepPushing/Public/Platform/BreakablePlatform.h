@@ -18,32 +18,33 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Breakable")
-	float timerToDestroy = 3.f;
+	float _timerToDestroy = 3.f;
+	float _currentTimer = 0.f;
+	float blinkTimer = 0.f;
 	
-	float currentTimer = 0.f;
-
-	
-	bool isActivated = false; // Plateforme activée (contact joueur)
+	bool _isActivated = false;
+	bool _isBlinking = false;
 
 	
 	void StartBlinking(); // Clignotement etc. à gérer (peut être un bool pour clignoter)
 
 	
 	UPROPERTY(EditAnywhere, Category="Breakable")
-	USoundBase* warningSound; // Son à jouer (référence à un son à configurer dans Blueprint)
+	USoundBase* _warningSound; // Son à jouer (référence à un son à configurer dans Blueprint)
 
 	
 	UFUNCTION()
-	void OnPlayerContact(); // Fonction appelée lors du contact joueur
+	void OnComponentHit(
+			UPrimitiveComponent* hitComponent,
+			AActor* otherActor,
+			UPrimitiveComponent* otherComp,
+			FVector normalImpulse,
+			const FHitResult& hit
+		);
 
 	
-	void DestroyPlatform(); // Destruction plateforme
-
-public:
-	
-	UFUNCTION()
-	void NotifyPlayerContact(); // Appelé quand joueur entre en collision (à brancher au collider)
+	void DestroyPlatform();
 };
