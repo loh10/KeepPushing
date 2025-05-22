@@ -1,10 +1,21 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Platform.generated.h"
+
+
+
+UENUM(BlueprintType)
+enum class EAxisMovement : uint8
+{
+	X UMETA(DisplayName = "X"),
+	Y UMETA(DisplayName = "Y"),
+	Z UMETA(DisplayName = "Z")
+};
+
+
+
 
 UCLASS()
 class KEEPPUSHING_API APlatform : public AActor
@@ -12,14 +23,18 @@ class KEEPPUSHING_API APlatform : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	APlatform();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UStaticMeshComponent* mesh; // Composants visibles et collisions (à ajouter)
+
+	
+	FVector startPosition; // Position de départ pour plateformes mouvantes
 };
