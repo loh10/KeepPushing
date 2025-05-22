@@ -9,8 +9,6 @@ AMovingPlatform::AMovingPlatform()
 void AMovingPlatform::BeginPlay()
 {
 	Super::BeginPlay();
-
-	currentStartPos = GetActorLocation();
 }
 
 void AMovingPlatform::Tick(float DeltaTime)
@@ -23,36 +21,36 @@ void AMovingPlatform::Tick(float DeltaTime)
 void AMovingPlatform::Move(float DeltaTime)
 {
 
-	if (movementSpeed <= 0.f) return; // Protection division par zéro
+	if (_movementSpeed <= 0.f) return; // Zero division protection
 
-	// Calcul du cycle selon la vitesse
-	float cycleLength = 2.f * offsetTarget; // aller + retour
-	float moveCycleDuration = cycleLength / movementSpeed;
+	// Cycle calculation based on speed (complete outward + return cycle)
+	float cycleLength = 2.f * _offsetTarget;
+	float moveCycleDuration = cycleLength / _movementSpeed;
 	
-	moveTimer += DeltaTime;
-	if (moveTimer >= moveCycleDuration)
+	_moveTimer += DeltaTime;
+	if (_moveTimer >= moveCycleDuration)
 	{
-		moveTimer -= moveCycleDuration;  
+		_moveTimer -= moveCycleDuration;  
 	}
 
-	float alpha = moveTimer / moveCycleDuration;
+	float alpha = _moveTimer / moveCycleDuration;
 	float sinAlpha = 0.5f * (1.f - FMath::Cos(alpha * 2 * PI));
 
-	FVector targetPos = currentStartPos;
-	switch (axisToMove)
+	FVector targetPos = startPosition;
+	switch (_axisToMove)
 	{
 	case EAxisMovement::X:
-		targetPos.X += offsetTarget;
+		targetPos.X += _offsetTarget;
 		break;
 	case EAxisMovement::Y:
-		targetPos.Y += offsetTarget;
+		targetPos.Y += _offsetTarget;
 		break;
 	case EAxisMovement::Z:
-		targetPos.Z += offsetTarget;
+		targetPos.Z += _offsetTarget;
 		break;
 	}
 
-	FVector newLocation = FMath::Lerp(currentStartPos, targetPos, sinAlpha);
-	SetActorLocation(newLocation, true); // true pour activer le sweep (collision)
+	FVector newLocation = FMath::Lerp(startPosition, targetPos, sinAlpha);
+	SetActorLocation(newLocation, true); // true to activate sweep (collision)
 }
 

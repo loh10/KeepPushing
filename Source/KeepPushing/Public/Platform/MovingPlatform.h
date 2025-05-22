@@ -26,24 +26,21 @@ protected:
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving")
-	EAxisMovement axisToMove = EAxisMovement::X;
+	EAxisMovement _axisToMove = EAxisMovement::X;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving")
-	float offsetTarget = 500.f; // distance de déplacement
+	float _offsetTarget = 500.f; // travel distance
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving")
-	float movementSpeed = 5.f; // durée aller-retour
+	float _movementSpeed = 100.f;
 
 	
-	float direction = 1.f; // 1 ou -1 pour aller et retour
-
-	
-	FVector currentStartPos;
+	float _direction = 1.f; // 1 or -1 for round trip
 	
 	
-	float moveTimer = 0.f;
+	float _moveTimer = 0.f;
 
 	
 	void Move(float deltaTime);
