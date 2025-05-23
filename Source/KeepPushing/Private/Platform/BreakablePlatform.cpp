@@ -59,11 +59,7 @@ void ABreakablePlatform::OnComponentHit(
 			FVector normalImpulse,
 			const FHitResult& hit
 		)
-{
-
-	UE_LOG(LogTemp, Warning, TEXT("Unter Overlap"));
-
-	
+{	
 	if (!_isActivated && otherActor && otherActor != this)
 	{
 		_isActivated = true;
