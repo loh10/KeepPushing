@@ -8,10 +8,10 @@ AStartAndFinish::AStartAndFinish()
 	_boxTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxTrigger"));
 	SetRootComponent(_boxTrigger);
 
-	_boxTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	_boxTrigger->SetCollisionObjectType(ECC_WorldDynamic);
-	_boxTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
-	_boxTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	// _boxTrigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	// _boxTrigger->SetCollisionObjectType(ECC_WorldDynamic);
+	// _boxTrigger->SetCollisionResponseToAllChannels(ECR_Ignore);
+	// _boxTrigger->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	_boxTrigger->SetGenerateOverlapEvents(true);
 }
 
@@ -19,8 +19,7 @@ void AStartAndFinish::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (_boxTrigger)
-	{
+	if (_boxTrigger) {
 		_boxTrigger->OnComponentBeginOverlap.AddDynamic(this, &AStartAndFinish::OnTriggerEnter);
 	}
 }
