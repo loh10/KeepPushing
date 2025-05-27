@@ -13,6 +13,7 @@ class KEEPPUSHING_API ANotDeadlyTrap : public ATrap
 public:
 	ANotDeadlyTrap();
 
-protected:
+protected:	
+
 	virtual void AffectPlayer(AActor* player);
 };

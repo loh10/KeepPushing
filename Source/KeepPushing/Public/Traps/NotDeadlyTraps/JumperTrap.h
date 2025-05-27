@@ -14,6 +14,10 @@ public:
 	AJumperTrap();
 
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trap")
+	UBoxComponent* _trigger;
+	
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumperTrap")

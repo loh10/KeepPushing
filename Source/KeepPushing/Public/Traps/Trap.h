@@ -15,7 +15,4 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trap")
-	UBoxComponent* _trigger;
 };

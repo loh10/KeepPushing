@@ -39,7 +39,7 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 		{
 		case EStartFinishType::Start:
 			OnTriggerEvent.Broadcast(EStartFinishType::Start);
-			UE_LOG(LogTemp, Warning, TEXT("Event Start Race"));
+			//UE_LOG(LogTemp, Warning, TEXT("Event Start Race"));
 			GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,
@@ -50,7 +50,7 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 
 		case EStartFinishType::Finish:
 			OnTriggerEvent.Broadcast(EStartFinishType::Finish);
-			UE_LOG(LogTemp, Warning, TEXT("Event Finish Race"));
+			//UE_LOG(LogTemp, Warning, TEXT("Event Finish Race"));
 			GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,

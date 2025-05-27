@@ -6,14 +6,15 @@
 AJumperTrap::AJumperTrap()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	_trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
+	RootComponent = _trigger;
 }
 
 void AJumperTrap::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Super::BeginPlay();
-	
 	if (_trigger)
 	{
 		_trigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -35,11 +36,11 @@ void AJumperTrap::AffectPlayer(AActor* player)
 		FVector impulse = FVector(0.f, 0.f, _jumpForce);
 		rootComp->AddImpulse(impulse, NAME_None, true);
 
-		UE_LOG(LogTemp, Warning, TEXT("JumperTrap applied impulse to %s"), *player->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("JumperTrap applied impulse to %s"), *player->GetName());
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("JumperTrap: %s has no simulating physics!"), *player->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("JumperTrap: %s has no simulating physics!"), *player->GetName());
 	}
 	
 	/*APawn* pawn = Cast<APawn>(player);
@@ -71,5 +72,5 @@ void AJumperTrap::OnComponentHit(
 	AffectPlayer(otherActor);
 
 	// You can play a sound, spawn effects, etc. here
-	UE_LOG(LogTemp, Warning, TEXT("JumperTrap activated by: %s"), *otherActor->GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("JumperTrap activated by: %s"), *otherActor->GetName());
 }
