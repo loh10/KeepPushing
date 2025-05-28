@@ -299,6 +299,11 @@ void ACar::BrakeActionComplete(const FInputActionValue& Value)
 
 void ACar::TurnActionTriggered(const FInputActionValue& Value)
 {
+	const FVector PlaneVelocity = FVector(Box->GetPhysicsLinearVelocity().X, Box->GetPhysicsLinearVelocity().Y, 0.f);
+	if (PlaneVelocity.Length() < 10.f) {
+		return;
+	}
+	
 	SteeringInput = Value.Get<float>();
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
