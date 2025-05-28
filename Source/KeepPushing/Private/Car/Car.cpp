@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ACar::ACar()
@@ -248,13 +249,13 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 
 void ACar::CalculateLateralSlipping(const USceneComponent* CurrentWheel)
 {
-	GripFactor = bIsDrifting ? .1f : .5f;
+	GripFactor = bIsDrifting ? 0.1f : 0.5f;
 	
 	const FVector WorldLocation = CurrentWheel->GetComponentLocation();
 	const FVector RightVector = CurrentWheel->GetRightVector();
 	const FVector Velocity = Box->GetPhysicsLinearVelocityAtPoint(WorldLocation);
 
-	float Force = UKismetMathLibrary::Dot_VectorVector(Velocity, RightVector) * -1.f * GripFactor;
+	float Force = (UKismetMathLibrary::Dot_VectorVector(Velocity, RightVector) * -1.f) * GripFactor;
 	Force /= UGameplayStatics::GetWorldDeltaSeconds(this);
 	
 	const FVector VectorForce = FVector(Force) * FVector(TireMass) * RightVector;
