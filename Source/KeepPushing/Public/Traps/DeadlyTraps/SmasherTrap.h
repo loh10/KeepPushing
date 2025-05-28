@@ -1,6 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 #include "DeadlyTrap.h"
@@ -19,10 +17,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Smasher")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Smasher")
 	UStaticMeshComponent* _leftBlock;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Smasher")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Smasher")
 	UStaticMeshComponent* _rightBlock;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
@@ -30,12 +28,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
 	float _direction = 1.f;
-	
-	bool _isClosing = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
+	float _timer = 3.f;
+
+	
 	FVector _leftStart;
 	FVector _rightStart;
-
+	
+	FVector _leftStop;
+	FVector _rightStop;
+	
 	
 	virtual void Activate() override;
 	virtual void Deactivate() override;
@@ -50,7 +53,4 @@ protected:
 		);
 
 	virtual void KillPlayer(AActor* victim) override;
-
-private:
-	static bool CheckVectorEpsilon(const FVector& start, const FVector& target, float epsilon = 0.01f);
 };
