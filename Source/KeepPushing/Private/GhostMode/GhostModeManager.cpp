@@ -64,7 +64,7 @@ void AGhostModeManager::InitializeGhostMode()
 void AGhostModeManager::SaveCurrentTracePoint(const float currentTimer)
 {
 	if (const FTrace* Trace = SaveRacePoints.Find(CurrentMapName)) {
-		if (Trace->Time > currentTimer) {
+		if (Trace->Time < currentTimer) {
 			return;
 		}
 	}
