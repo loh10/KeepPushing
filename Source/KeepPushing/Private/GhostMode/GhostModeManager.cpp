@@ -27,6 +27,10 @@ void AGhostModeManager::BeginPlay()
 
 void AGhostModeManager::InitializeGhostMode()
 {
+	if (!FollowedCar.IsValid()) {
+		return;
+	}
+	
 	if (const FTrace* Trace = SaveRacePoints.Find(CurrentMapName))
 	{
 		_followGhostCarPoint = Trace->Points;
@@ -52,6 +56,10 @@ void AGhostModeManager::SaveCurrentTracePoint(const float currentTimer)
 void AGhostModeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!FollowedCar.IsValid()) {
+		return;
+	}
+	
 	RegisterSplinePoint(DeltaTime);
 
 	if (IsValid(_ghostCarPtr)) {
