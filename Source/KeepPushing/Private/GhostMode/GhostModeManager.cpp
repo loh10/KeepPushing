@@ -1,8 +1,10 @@
 ﻿#include "GhostMode/GhostModeManager.h"
 
+#include "Car/Car.h"
 #include "GhostMode/GhostModeData.h"
 #include "GhostMode/GhostTraceSaver.h"
 #include "Kismet/GameplayStatics.h"
+#include "Timer/Timer.h"
 
 namespace GhostModeManagerConstant
 {
@@ -21,8 +23,25 @@ AGhostModeManager::AGhostModeManager()
 void AGhostModeManager::BeginPlay()
 {
 	Super::BeginPlay();
+	FollowedCar = UGameplayStatics::GetActorOfClass(this, ACar::StaticClass());
+	
 	LoadTracesPoints();
 	InitializeGhostMode();
+}
+
+void AGhostModeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (const ATimer* Timer = Cast<ATimer>(UGameplayStatics::GetActorOfClass(this, ATimer::StaticClass()))) {
+		const float CurrentTimerTime = Timer->GetElapsed();
+		if (CurrentTimerTime == 0.f)
+		{
+			return;
+		}
+
+		SaveCurrentTracePoint(CurrentTimerTime);
+		SaveTracesPoints();
+	}
 }
 
 void AGhostModeManager::InitializeGhostMode()
