@@ -5,17 +5,12 @@
 #include "Components/BoxComponent.h"
 #include "StartAndFinish.generated.h"
 
-
-
-
 UENUM(BlueprintType)
 enum class EStartFinishType : uint8
 {
 	Start UMETA(DisplayName = "Start"),
 	Finish UMETA(DisplayName = "Finish"),
 };
-
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTriggerEvent, EStartFinishType, triggerType);
 

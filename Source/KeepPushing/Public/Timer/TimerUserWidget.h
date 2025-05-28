@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "TimerComponent.h"
+#include "Timer.h"
 #include "Components/Button.h"
 #include "TimerUserWidget.generated.h"
 
@@ -15,7 +15,7 @@ class KEEPPUSHING_API UTimerUserWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Timer")
-	void InitTimer(UTimerComponent* InTimer) { Timer = InTimer; }
+	void InitTimer(ATimer* InTimer) { Timer = InTimer; }
 
 protected:
 	UPROPERTY(meta=(BindWidget))
@@ -45,5 +45,5 @@ protected:
 
 private:
 	UPROPERTY()
-	UTimerComponent* Timer = nullptr;
+	ATimer* Timer = nullptr;
 };
