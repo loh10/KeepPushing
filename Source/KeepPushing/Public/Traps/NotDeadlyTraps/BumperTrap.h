@@ -3,15 +3,15 @@
 #include "CoreMinimal.h"
 #include "NotDeadlyTrap.h"
 #include "GameFramework/Actor.h"
-#include "PusherTrap.generated.h"
+#include "BumperTrap.generated.h"
 
 UCLASS()
-class KEEPPUSHING_API APusherTrap : public ANotDeadlyTrap
+class KEEPPUSHING_API ABumperTrap : public ANotDeadlyTrap
 {
 	GENERATED_BODY()
 
 public:
-	APusherTrap();
+	ABumperTrap();
 
 protected:
 	virtual void BeginPlay() override;

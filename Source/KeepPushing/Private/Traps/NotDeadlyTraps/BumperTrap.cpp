@@ -1,7 +1,7 @@
-﻿#include "Traps/NotDeadlyTraps/PusherTrap.h"
+﻿#include "Traps/NotDeadlyTraps/BumperTrap.h"
 
 
-APusherTrap::APusherTrap()
+ABumperTrap::ABumperTrap()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -12,14 +12,14 @@ APusherTrap::APusherTrap()
 	_pusherMesh->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 }
 
-void APusherTrap::BeginPlay()
+void ABumperTrap::BeginPlay()
 {
 	Super::BeginPlay();
 
-	_pusherMesh->OnComponentHit.AddDynamic(this, &APusherTrap::OnPusherHit);
+	_pusherMesh->OnComponentHit.AddDynamic(this, &ABumperTrap::OnPusherHit);
 }
 
-void APusherTrap::OnPusherHit(
+void ABumperTrap::OnPusherHit(
 	UPrimitiveComponent* hitComponent,
 	AActor* otherActor,
 	UPrimitiveComponent* otherComp,
@@ -38,7 +38,7 @@ void APusherTrap::OnPusherHit(
 	}
 }
 
-void APusherTrap::AffectPlayer(AActor* player)
+void ABumperTrap::AffectPlayer(AActor* player)
 {
 	if (!player) return;
 
