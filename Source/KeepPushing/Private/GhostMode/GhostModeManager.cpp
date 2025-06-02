@@ -1,8 +1,10 @@
 ﻿#include "GhostMode/GhostModeManager.h"
 
+#include "Car/Car.h"
 #include "GhostMode/GhostModeData.h"
 #include "GhostMode/GhostTraceSaver.h"
 #include "Kismet/GameplayStatics.h"
+#include "Timer/Timer.h"
 
 namespace GhostModeManagerConstant
 {
@@ -21,12 +23,33 @@ AGhostModeManager::AGhostModeManager()
 void AGhostModeManager::BeginPlay()
 {
 	Super::BeginPlay();
+	FollowedCar = UGameplayStatics::GetActorOfClass(this, ACar::StaticClass());
+	
 	LoadTracesPoints();
 	InitializeGhostMode();
 }
 
+void AGhostModeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (const ATimer* Timer = Cast<ATimer>(UGameplayStatics::GetActorOfClass(this, ATimer::StaticClass()))) {
+		const float CurrentTimerTime = Timer->GetElapsed();
+		if (CurrentTimerTime == 0.f)
+		{
+			return;
+		}
+
+		SaveCurrentTracePoint(CurrentTimerTime);
+		SaveTracesPoints();
+	}
+}
+
 void AGhostModeManager::InitializeGhostMode()
 {
+	if (!FollowedCar.IsValid()) {
+		return;
+	}
+	
 	if (const FTrace* Trace = SaveRacePoints.Find(CurrentMapName))
 	{
 		_followGhostCarPoint = Trace->Points;
@@ -41,7 +64,7 @@ void AGhostModeManager::InitializeGhostMode()
 void AGhostModeManager::SaveCurrentTracePoint(const float currentTimer)
 {
 	if (const FTrace* Trace = SaveRacePoints.Find(CurrentMapName)) {
-		if (Trace->Time > currentTimer) {
+		if (Trace->Time < currentTimer) {
 			return;
 		}
 	}
@@ -52,6 +75,10 @@ void AGhostModeManager::SaveCurrentTracePoint(const float currentTimer)
 void AGhostModeManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!FollowedCar.IsValid()) {
+		return;
+	}
+	
 	RegisterSplinePoint(DeltaTime);
 
 	if (IsValid(_ghostCarPtr)) {
