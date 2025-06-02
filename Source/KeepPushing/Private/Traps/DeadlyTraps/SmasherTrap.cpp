@@ -16,70 +16,72 @@ void ASmasherTrap::BeginPlay()
 {
 	Super::BeginPlay();
 
-	_leftStart = _leftBlock->GetRelativeLocation();
-	_rightStart = _rightBlock->GetRelativeLocation();
+	_leftStart = _leftBlock->GetComponentLocation();
+	_rightStart = _rightBlock->GetComponentLocation();
 
 	_leftBlock->OnComponentHit.AddDynamic(this, &ASmasherTrap::OnComponentHit);
 	_rightBlock->OnComponentHit.AddDynamic(this, &ASmasherTrap::OnComponentHit);
 	
 	Activate();
 	
-	UE_LOG(LogTemp, Warning, TEXT("_isClosing = %s"), _isClosing ? TEXT("true") : TEXT("false"));
+	{
+		FBox rightBox = _rightBlock->GetStaticMesh()->GetBoundingBox();
+		FBox leftBox = _leftBlock->GetStaticMesh()->GetBoundingBox();
 
+		FVector middle  = (_leftStart + _rightStart) / 2.f;
+
+		_rightStop = middle + (rightBox.GetExtent().X) * -_rightBlock->GetComponentQuat().GetForwardVector();
+		_leftStop = middle + (leftBox.GetExtent().X) * -_leftBlock->GetComponentQuat().GetForwardVector();
+	}
+
+#if WITH_EDITOR	
+	DrawDebugLine(GetWorld(), _leftStart, _leftStop, FColor::Blue, true);
+	DrawDebugLine(GetWorld(), _rightStart, _rightStop, FColor::Red, true);
+#endif
 }
 
 void ASmasherTrap::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (_isActivated && _isClosing)
+	if (!_isActivated)
 	{
-		FVector directionToOther = (_rightBlock->GetRelativeLocation() - _leftBlock->GetRelativeLocation()).GetSafeNormal();
-
-		_leftBlock->AddRelativeLocation(directionToOther * _direction * _moveSpeed * DeltaTime);
-		_rightBlock->AddRelativeLocation(-directionToOther * _direction * _moveSpeed * DeltaTime);
-
-		float leftDirectionToStart = _leftStart.X - _leftBlock->GetRelativeLocation().X;
-		float rightDirectionToStart = _rightStart.X - _rightBlock->GetRelativeLocation().X;
-		
-		// Ouverture : retour à la position de départ
-		if (_direction > 0.f && leftDirectionToStart < 1.f || rightDirectionToStart < 1.f)
+		_timer -= DeltaTime;
+		if (_timer <= 0.f)
 		{
-			_direction = 1.f;
+			Activate();
+			return;
 		}
+		return;
 	}
+	
+	const FVector leftTarget = (_direction > 0.f) ? _leftStop : _leftStart;
+	const FVector rightTarget = (_direction > 0.f) ? _rightStop : _rightStart;
+
+	const FVector leftMove = (leftTarget - _leftBlock->GetComponentLocation()).GetSafeNormal();
+	const FVector rightMove = (rightTarget - _rightBlock->GetComponentLocation()).GetSafeNormal();
+
+	const float leftDist = FVector::Dist(_leftBlock->GetComponentLocation(), leftTarget);
+	const float rightDist = FVector::Dist(_rightBlock->GetComponentLocation(), rightTarget);
+
+	_leftBlock->AddWorldOffset(leftMove * FMath::Clamp(_moveSpeed * DeltaTime, 0, leftDist));
+	_rightBlock->AddWorldOffset(rightMove * FMath::Clamp(_moveSpeed * DeltaTime, 0, rightDist));
 
 
-#if WITH_EDITOR
-	DrawDebugSphere(
-		GetWorld(),
-		GetActorTransform().TransformPosition(_leftStart),
-		25.f,  // rayon
-		12,    // segments
-		FColor::Red,
-		false, // persistant
-		-1.f,  // durée
-		0      // profondeur de priorité
-	);
-	DrawDebugSphere(
-		GetWorld(),
-		GetActorTransform().TransformPosition(_rightStart),
-		25.f,
-		12,
-		FColor::Blue,
-		false,
-		-1.f,
-		0
-	);
-#endif
+	if (leftDist < 1.f || rightDist < 1.f)
+	{
+		_direction *= -1.f;
+
+		if (_direction > 0.f)
+			Deactivate();
+	}
 }
 
 void ASmasherTrap::Activate()
 {
 	UE_LOG(LogTemp, Error, TEXT("SMASHER: ACTIVATED!"));
 
-	_isClosing = true;
-	_direction = 1.f;
+	_isActivated = true;
 
 	Super::Activate();
 }
@@ -88,9 +90,9 @@ void ASmasherTrap::Deactivate()
 {
 	UE_LOG(LogTemp, Error, TEXT("SMASHER: DEACTIVATED!"));
 
-	_isClosing = false;
-	_direction = -1.f;
-	
+	_isActivated = false;
+	_timer = 3.f;
+
 	Super::Deactivate();
 }
 
@@ -102,34 +104,16 @@ void ASmasherTrap::OnComponentHit(
 			const FHitResult& hit
 			)
 {
-	if (!_isActivated || otherActor == nullptr || otherActor == this)
-	{
-		_direction = -1.f;
-		//UE_LOG(LogTemp, Warning, TEXT("SMASHER: HIT DETECTED, BUT IGNORED!"));	
-		return;
-	}
-	
-	if (otherActor == _leftBlock->GetOwner() || otherActor == _rightBlock->GetOwner() ||
-		otherComp == _leftBlock || otherComp == _rightBlock) // Si on touche l'autre bloc
-	{
-		//Deactivate();
-		_direction = -1.f;
-		//UE_LOG(LogTemp, Warning, TEXT("Smasher: Blocks collided, returning to origin."));
-		return;
-	}
 
-	//UE_LOG(LogTemp, Error, TEXT("SMASHER: Hit detected!"));
-	// Si on touche le player (ou autre chose), on applique la mort si besoin (par exemple Cast<APawn>(otherActor)
+	const APawn* vehicle = Cast<APawn>(otherActor); // ACar a modifier quand j'aurais la classe voiture;
+
+	if (vehicle == nullptr) return;
+
 	KillPlayer(otherActor);
 }
 
 void ASmasherTrap::KillPlayer(AActor* victim)
 {
 	OnTrapKillPlayer.Broadcast(victim);
-	//UE_LOG(LogTemp, Error, TEXT("SMASHER: PLAYER CRUSHED!"));
-}
-
-bool ASmasherTrap::CheckVectorEpsilon(const FVector& start, const FVector& target, float epsilon)
-{
-	return FVector::DistSquared(start, target) < FMath::Square(epsilon);
+	UE_LOG(LogTemp, Error, TEXT("SMASHER: PLAYER CRUSHED!"));
 }
