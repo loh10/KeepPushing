@@ -45,7 +45,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "GhostMode")
 	FString CurrentMapName;
 
-	UPROPERTY(BlueprintReadWrite, Category = "GhostMode")
+	UPROPERTY(BlueprintReadWrite, Category = "GhostMode", meta = (ScriptName = "GhostModeManager_FollowedCar"))
 	TWeakObjectPtr<AActor> FollowedCar;
 	
 	TMap<FString, struct FTrace> SaveRacePoints;
