@@ -34,7 +34,7 @@ void ABumperTrap::OnPusherHit(
 		// Ajoute ici animation/sfx :
 		// UGameplayStatics::PlaySoundAtLocation(this, YourSound, GetActorLocation());
 
-		UE_LOG(LogTemp, Warning, TEXT("PusherTrap: Hit by %s"), *otherActor->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("PusherTrap: Hit by %s"), *otherActor->GetName());
 	}
 }
 
@@ -59,6 +59,6 @@ void ABumperTrap::AffectPlayer(AActor* player)
 
 		playerComp->AddImpulse(pushDir * pushForce, NAME_None, true);
 
-		UE_LOG(LogTemp, Warning, TEXT("PusherTrap: Applied force %f in dir %s (speed %f)"), pushForce, *pushDir.ToString(), speed);
+		//UE_LOG(LogTemp, Warning, TEXT("PusherTrap: Applied force %f in dir %s (speed %f)"), pushForce, *pushDir.ToString(), speed);
 	}
 }

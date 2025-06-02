@@ -18,7 +18,7 @@ void ADeadlyTrap::Activate()
 {
 	_isActivated = true;
 	_isArmed = false;
-	UE_LOG(LogTemp, Warning, TEXT("_isActivated = %s"), _isActivated ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Warning, TEXT("_isActivated = %s"), _isActivated ? TEXT("true") : TEXT("false"));
 	// Child can override to add visuals/audio
 	// After activation duration, go back to arming
 }
