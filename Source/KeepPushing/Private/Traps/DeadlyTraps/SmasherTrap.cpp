@@ -1,5 +1,6 @@
 ﻿#include "Traps/DeadlyTraps/SmasherTrap.h"
 #include "DrawDebugHelpers.h"
+#include "Car/Car.h"
 
 ASmasherTrap::ASmasherTrap()
 {
@@ -105,7 +106,7 @@ void ASmasherTrap::OnComponentHit(
 			)
 {
 
-	const APawn* vehicle = Cast<APawn>(otherActor); // ACar a modifier quand j'aurais la classe voiture;
+	const ACar* vehicle = Cast<ACar>(otherActor);
 
 	if (vehicle == nullptr) return;
 
@@ -116,4 +117,10 @@ void ASmasherTrap::KillPlayer(AActor* victim)
 {
 	OnTrapKillPlayer.Broadcast(victim);
 	UE_LOG(LogTemp, Error, TEXT("SMASHER: PLAYER CRUSHED!"));
+	GEngine->AddOnScreenDebugMessage(
+				-1,
+				2.0f,
+				FColor::Green,
+				FString::Printf(TEXT("SMASHER: PLAYER CRUSHED %s"), *victim->GetName())
+				);
 }

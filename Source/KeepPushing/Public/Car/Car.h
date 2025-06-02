@@ -26,6 +26,8 @@ public:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* Input) override;
 
+	
+
 private:
 	void HandleWheelForce(const USceneComponent* CurrentWheel);
 
@@ -62,6 +64,9 @@ private:
 	void DashActionPressed(const FInputActionValue& Value);
 
 	void DashActionReleased(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void PlayerDeath(AActor* victim);
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Car|Input")
@@ -181,5 +186,8 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	FVector DashForce = FVector(13000.f, 0.f, 0.f);
+
+	UPROPERTY(EditAnywhere)
+	FTransform _startTransform;
 };
 
