@@ -8,6 +8,10 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "EngineUtils.h"
+#include "Traps/DeadlyTraps/SmasherTrap.h"
+
+class ASmasherTrap;
 
 ACar::ACar()
 {
@@ -44,6 +48,20 @@ ACar::ACar()
 void ACar::BeginPlay()
 {
 	Super::BeginPlay();
+	_startTransform = Box->GetComponentTransform();
+	for (TActorIterator<ASmasherTrap> It(GetWorld()); It; ++It)
+	{
+		It->OnTrapKillPlayer.AddDynamic(this, &ACar::PlayerDeath);
+	}
+	
+}
+
+void ACar::PlayerDeath(AActor* victim)
+{
+	Box->SetWorldTransform(_startTransform);
+	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
+	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());
+	Box->SetWorldTransform(_startTransform);
 }
 
 void ACar::Tick(float DeltaTime)
@@ -65,13 +83,13 @@ void ACar::Tick(float DeltaTime)
 		Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 
 		const FVector ForceVector = Box->GetForwardVector();
-		Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.X, DashForce.Z), EName::None, true);
+		Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.Y, DashForce.Z), EName::None, true);
 		bCanDash = false;
 	}
 	else if (bIsJumping && bFullGrounded)
 	{
 		const FVector CurrentVelocity = Box->GetComponentVelocity();
-		Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(0., 0., 1.));
+		Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
 		Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
 	}
 }
@@ -272,7 +290,7 @@ void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance
 		const FVector WorldLocation = CurrentWheel->GetComponentLocation();
 		const FVector Velocity = Box->GetComponentVelocity();
 
-		Box->SetAllPhysicsLinearVelocity(FVector(Velocity.X, Velocity.Y, 0.f));
+		Box->SetAllPhysicsLinearVelocity(FVector(Velocity.X, Velocity.Y, Velocity.Z));
 		Box->AddForceAtLocation(FVector(JumpForce) * FVector::UpVector, WorldLocation);
 	}
 }
@@ -305,6 +323,7 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 	}
 	
 	SteeringInput = Value.Get<float>();
+	
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
 		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
