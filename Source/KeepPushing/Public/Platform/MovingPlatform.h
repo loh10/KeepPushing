@@ -25,15 +25,15 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving", meta = (ScriptName = "AxisToMovePython"))
 	EAxisMovement _axisToMove = EAxisMovement::X;
 
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving", meta = (ScriptName = "OffsetTargetPython"))
 	float _offsetTarget = 500.f; // travel distance
 
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Moving", meta = (ScriptName = "MovementSpeedPython"))
 	float _movementSpeed = 100.f;
 
 	
