@@ -13,7 +13,7 @@ AVoidZone::AVoidZone()
 	_triggerZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	_triggerZone->SetCollisionObjectType(ECC_WorldDynamic);
 	_triggerZone->SetCollisionResponseToAllChannels(ECR_Ignore);
-	_triggerZone->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	_triggerZone->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 	_triggerZone->SetBoxExtent(FVector(100.f, 100.f, 100.f));
 	
 	_triggerZone->OnComponentBeginOverlap.AddDynamic(this, &AVoidZone::OnOverlapBegin);
