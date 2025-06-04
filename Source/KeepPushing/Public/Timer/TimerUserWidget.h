@@ -23,14 +23,14 @@ protected:
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-	UPROPERTY(meta = (BindWidget))
+	/*UPROPERTY(meta = (BindWidget))
 	UButton* StartButton = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* PauseButton = nullptr;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* ResetButton = nullptr;
+	UButton* ResetButton = nullptr;*/
 
 	virtual void NativeConstruct() override; // Add this override
 

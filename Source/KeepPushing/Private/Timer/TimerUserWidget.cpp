@@ -16,14 +16,14 @@ void UTimerUserWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (StartButton)
+	/*if (StartButton)
 		StartButton->OnClicked.AddDynamic(this, &UTimerUserWidget::OnStartClicked);
 
 	if (PauseButton)
 		PauseButton->OnClicked.AddDynamic(this, &UTimerUserWidget::OnPauseClicked);
 
 	if (ResetButton)
-		ResetButton->OnClicked.AddDynamic(this, &UTimerUserWidget::OnResetClicked);
+		ResetButton->OnClicked.AddDynamic(this, &UTimerUserWidget::OnResetClicked);*/
 }
 
 void UTimerUserWidget::OnStartClicked()

@@ -8,7 +8,7 @@ AJumperTrap::AJumperTrap()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	_trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
-	RootComponent = _trigger;
+	_trigger->SetupAttachment(RootComponent);
 }
 
 void AJumperTrap::BeginPlay()
