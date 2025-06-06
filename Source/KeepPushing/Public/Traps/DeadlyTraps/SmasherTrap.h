@@ -28,17 +28,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
 	float _direction = 1.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
-	float _timer = 3.f;
-
 	
 	FVector _leftStart;
 	FVector _rightStart;
 	
 	FVector _leftStop;
 	FVector _rightStop;
-	
+
+	bool _isActivated = false;
 	
 	virtual void Activate() override;
 	virtual void Deactivate() override;

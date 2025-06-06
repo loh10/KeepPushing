@@ -43,16 +43,16 @@ void ASmasherTrap::BeginPlay()
 
 void ASmasherTrap::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
 
 	if (!_isActivated)
 	{
-		_timer -= DeltaTime;
+		/*_timer -= DeltaTime;
 		if (_timer <= 0.f)
 		{
 			Activate();
 			return;
-		}
+		}*/
+		Super::Tick(DeltaTime);
 		return;
 	}
 	
@@ -92,7 +92,7 @@ void ASmasherTrap::Deactivate()
 	UE_LOG(LogTemp, Error, TEXT("SMASHER: DEACTIVATED!"));
 
 	_isActivated = false;
-	_timer = 3.f;
+	_timer = _activationDuration;
 
 	Super::Deactivate();
 }
@@ -117,10 +117,10 @@ void ASmasherTrap::KillPlayer(AActor* victim)
 {
 	OnTrapKillPlayer.Broadcast(victim);
 	UE_LOG(LogTemp, Error, TEXT("SMASHER: PLAYER CRUSHED!"));
-	GEngine->AddOnScreenDebugMessage(
+	/*GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,
 				FColor::Green,
 				FString::Printf(TEXT("SMASHER: PLAYER CRUSHED %s"), *victim->GetName())
-				);
+				);*/
 }

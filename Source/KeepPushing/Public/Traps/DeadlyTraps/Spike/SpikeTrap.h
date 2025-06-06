@@ -15,7 +15,21 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(EditAnywhere, Category = "SpikeTrap")
+	UStaticMeshComponent* _mesh = nullptr;
+	
+	UPROPERTY(EditAnywhere, Category = "SpikeTrap")
+	float _spikeLifetime = 2.f;
 
-public:
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, Category = "SpikeTrap")
+	float _distanceToSpawn = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "SpikeTrap")
+	TSubclassOf<class ASpikeComponent> _spikeClass;
+
+	UPROPERTY(EditAnywhere, Category = "SpikeTrap")
+	UCurveFloat* _movementCurve = nullptr;
+
+	virtual void Activate() override;
 };
