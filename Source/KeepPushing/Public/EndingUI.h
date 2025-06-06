@@ -7,6 +7,7 @@
 #include "StartAndFinish/StartAndFinish.h"
 #include "EndingUI.generated.h"
 
+class UTextBlock;
 class ATimer;
 /**
  * 
@@ -25,6 +26,9 @@ public:
 	
 protected:
 	virtual void NativeConstruct() override;
+
+	UPROPERTY(meta=(BindWidget))
+	UTextBlock* FinalTime = nullptr;
 
 private:
 	UPROPERTY()
