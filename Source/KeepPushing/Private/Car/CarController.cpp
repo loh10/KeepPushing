@@ -1,8 +1,18 @@
 ﻿#include "Car/CarController.h"
 
+#include "EndingUI.h"
 #include "Kismet/GameplayStatics.h"
 #include "StartAndFinish/StartAndFinish.h"
 #include "Timer/TimerUserWidget.h"
+
+ACarController::ACarController()
+{
+	static ConstructorHelpers::FClassFinder<UEndingUI> WidgetClassFinder(TEXT("/Game/EndUI"));
+	if (WidgetClassFinder.Succeeded())
+	{
+		EndingUIClass = WidgetClassFinder.Class;
+	}
+}
 
 void ACarController::BeginPlay()
 {
@@ -14,7 +24,18 @@ void ACarController::BeginPlay()
 	Timer = GetWorld()->SpawnActor<ATimer>();
 	Widget->InitTimer(Timer);
 	BindStartAndStopTimer();
+
+	if (EndingUIClass)
+	{
+		EndingUIInstance = CreateWidget<UEndingUI>(this, EndingUIClass);
+		if (EndingUIInstance)
+		{
+			EndingUIInstance->AddToViewport();
+			HideEndingUI();
+		}
+	}
 }
+
 
 void ACarController::BindStartAndStopTimer()
 {
@@ -42,8 +63,28 @@ void ACarController::BindTriggerEvent(const EStartFinishType Type)
 	case EStartFinishType::Finish:
 		{
 			Timer->StopTimer();
+			ShowEndingUI();
 			break;
 		}
 	}
 }
 
+void ACarController::ShowEndingUI()
+{
+	if (!EndingUIInstance && EndingUIClass)
+	{
+		EndingUIInstance = CreateWidget<UEndingUI>(this, EndingUIClass);
+	}
+	if (EndingUIInstance && !EndingUIInstance->IsInViewport())
+	{
+		EndingUIInstance->AddToViewport();
+	}
+}
+
+void ACarController::HideEndingUI()
+{
+	if (EndingUIInstance && EndingUIInstance->IsInViewport())
+	{
+		EndingUIInstance->RemoveFromParent();
+	}
+}
