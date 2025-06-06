@@ -26,7 +26,6 @@ void ASpikeComponent::Init(const FVector& direction, UCurveFloat* moveCurve, flo
 	_moveDirection = direction.GetSafeNormal();
 	_movementCurve = moveCurve;
 	_lifeTime = lifeTime;
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Magenta, TEXT("Spike Init"));
 }
 
 void ASpikeComponent::BeginPlay()
