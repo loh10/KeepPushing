@@ -23,7 +23,7 @@ public:
 
 	UFUNCTION()
 	void BindTriggerEvent(const EStartFinishType Type);
-	
+    
 public:
 	UPROPERTY(EditAnywhere, Category = "CarController|UI")
 	TSubclassOf<UTimerUserWidget> TimerWidgetClass;
@@ -37,9 +37,9 @@ public:
 	void ShowEndingUI();
 	void HideEndingUI();
 
-	
+    
 private:
 	TObjectPtr<ATimer> Timer;
 
-	
+    
 };

@@ -39,23 +39,23 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 		case EStartFinishType::Start:
 			OnTriggerEvent.Broadcast(EStartFinishType::Start);
 			//UE_LOG(LogTemp, Warning, TEXT("Event Start Race"));
-			GEngine->AddOnScreenDebugMessage(
+			/*GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,
 				FColor::Green,
 				FString::Printf(TEXT("Start Collided with: %s"), *otherActor->GetName())
-				);
+				);*/
 			break;
 
 		case EStartFinishType::Finish:
 			OnTriggerEvent.Broadcast(EStartFinishType::Finish);
 			//UE_LOG(LogTemp, Warning, TEXT("Event Finish Race"));
-			GEngine->AddOnScreenDebugMessage(
+			/*GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,
 				FColor::Blue,
 				FString::Printf(TEXT("Finish Collided with: %s"), *otherActor->GetName())
-				);
+				);*/
 			break;
 
 		default:
