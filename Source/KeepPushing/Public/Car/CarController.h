@@ -5,7 +5,6 @@
 #include "StartAndFinish/StartAndFinish.h"
 #include "CarController.generated.h"
 
-class UEndingUI;
 class UTimerUserWidget;
 class ATimer;
 
@@ -17,8 +16,6 @@ class KEEPPUSHING_API ACarController : public APlayerController
 public:
 	virtual void BeginPlay() override;
 
-	ACarController();
-
 	void BindStartAndStopTimer();
 
 	UFUNCTION()
@@ -27,19 +24,7 @@ public:
 public:
 	UPROPERTY(EditAnywhere, Category = "CarController|UI")
 	TSubclassOf<UTimerUserWidget> TimerWidgetClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CarController|UI")
-	TSubclassOf<UEndingUI> EndingUIClass;
-
-	UPROPERTY()
-	UEndingUI* EndingUIInstance;
-
-	void ShowEndingUI();
-	void HideEndingUI();
-
 	
 private:
 	TObjectPtr<ATimer> Timer;
-
-	
 };

@@ -91,7 +91,7 @@ void ACar::Tick(float DeltaTime)
 		Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 
 		const FVector ForceVector = Box->GetForwardVector();
-		Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.X, DashForce.Z), EName::None, true);
+		Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.Y, DashForce.Z), EName::None, true);
 		bCanDash = false;
 	}
 	else if (bIsJumping && bFullGrounded)
