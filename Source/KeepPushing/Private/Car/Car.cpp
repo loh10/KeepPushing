@@ -10,6 +10,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
 #include "Traps/DeadlyTraps/SmasherTrap.h"
+#include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "VoidZone/VoidZone.h"
 
 class ASmasherTrap;
@@ -52,17 +53,19 @@ void ACar::BeginPlay()
 	_startTransform = Box->GetComponentTransform();
 	for (TActorIterator<ASmasherTrap> It(GetWorld()); It; ++It)
 	{
-		It->OnTrapKillPlayer.AddDynamic(this, &ACar::PlayerDeath);
+		It->OnTrapKillPlayer.AddDynamic(this, &ACar::Kill);
 	}
 
 	for (TActorIterator<AVoidZone> It(GetWorld()); It; ++It)
 	{
-		It->OnVoidZoneTouched.AddDynamic(this, &ACar::PlayerDeath);
+		It->OnVoidZoneTouched.AddDynamic(this, &ACar::Kill);
 	}
 }
 
-void ACar::PlayerDeath(AActor* victim)
+
+void ACar::Kill(AActor* victim)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "You died");
 	Box->SetWorldTransform(_startTransform);
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());

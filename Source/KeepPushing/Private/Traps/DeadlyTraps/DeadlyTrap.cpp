@@ -12,12 +12,24 @@ ADeadlyTrap::ADeadlyTrap()
 void ADeadlyTrap::BeginPlay()
 {
 	Super::BeginPlay();
+	_timer = _activationDuration;
+}
+
+void ADeadlyTrap::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	_timer -= DeltaTime;
+	
+	if (_timer <= 0.f)
+	{
+		Activate();
+		return;
+	}
 }
 
 void ADeadlyTrap::Activate()
 {
-	_isActivated = true;
-	_isArmed = false;
 	//UE_LOG(LogTemp, Warning, TEXT("_isActivated = %s"), _isActivated ? TEXT("true") : TEXT("false"));
 	// Child can override to add visuals/audio
 	// After activation duration, go back to arming
@@ -25,8 +37,6 @@ void ADeadlyTrap::Activate()
 
 void ADeadlyTrap::Deactivate()
 {
-	_isActivated = false;
-	_isArmed = true;
 	// Child can override to add visuals/audio
 	// After arming duration, activate again
 }

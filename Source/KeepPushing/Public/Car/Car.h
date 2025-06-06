@@ -17,7 +17,6 @@ class KEEPPUSHING_API ACar : public APawn
 public:
 	ACar();
 
-public:
 	virtual void BeginPlay() override;
 	
 	virtual void Tick(float DeltaTime) override;
@@ -26,7 +25,8 @@ public:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* Input) override;
 
-	
+	UFUNCTION()
+	void Kill(AActor* victim);	
 
 private:
 	void HandleWheelForce(const USceneComponent* CurrentWheel);
@@ -64,9 +64,6 @@ private:
 	void DashActionPressed(const FInputActionValue& Value);
 
 	void DashActionReleased(const FInputActionValue& Value);
-
-	UFUNCTION()
-	void PlayerDeath(AActor* victim);
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Car|Input")
