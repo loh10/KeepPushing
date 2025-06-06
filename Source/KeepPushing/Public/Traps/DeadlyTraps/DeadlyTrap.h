@@ -21,24 +21,16 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY()
-	USceneComponent* _rootScene;
+	USceneComponent* _rootScene = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeadlyTrap")
-	float _armingDuration = 3.f;
+	float _activationDuration = 3.f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeadlyTrap")
-	float _activationDuration = 1.f;
-	
+	float _timer;
 
-	bool _isArmed = true;
-
-	bool _isActivated = false;
-
-	FTimerHandle _phaseTimer;
-
-	
 	virtual void Activate();
 
 	virtual void Deactivate();

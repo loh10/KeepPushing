@@ -67,15 +67,13 @@ void ABreakablePlatform::OnComponentHit(
 		// UGameplayStatics::PlaySoundAtLocation(this, soundToPlay, GetActorLocation());
 
 		// Affichage à l'écran (durée 2s, couleur rouge, id unique)
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
+
+			/*GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,
 				FColor::Red,
 				FString::Printf(TEXT("Touched by: %s"), *otherActor->GetName())
-			);
-		}
+			);*/
 		
 	}
 }
