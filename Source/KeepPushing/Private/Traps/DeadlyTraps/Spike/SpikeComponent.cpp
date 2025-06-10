@@ -7,7 +7,8 @@ ASpikeComponent::ASpikeComponent()
 	PrimaryActorTick.bCanEverTick = true;
 
 	_rootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
-	_rootScene->SetupAttachment(RootComponent);
+	_rootScene->SetMobility(EComponentMobility::Movable);
+	SetRootComponent(_rootScene);
 	
 	_mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	//RootComponent = _mesh;
