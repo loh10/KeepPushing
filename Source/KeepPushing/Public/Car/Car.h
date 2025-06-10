@@ -64,6 +64,8 @@ private:
 	void DashActionPressed(const FInputActionValue& Value);
 
 	void DashActionReleased(const FInputActionValue& Value);
+
+	float CalcDashForce();
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Car|Input")

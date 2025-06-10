@@ -93,6 +93,7 @@ void ACar::Tick(float DeltaTime)
 		const FVector ForceVector = Box->GetForwardVector();
 		Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.X, DashForce.Z), EName::None, true);
 		bCanDash = false;
+		CalcDashForce();
 	}
 	else if (bIsJumping && bFullGrounded)
 	{
@@ -101,6 +102,14 @@ void ACar::Tick(float DeltaTime)
 		Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
 	}
 }
+
+float ACar::CalcDashForce()
+{
+	float AccelToDashRatio = Box->GetPhysicsLinearVelocity().X/3000;
+	UE_LOG(LogTemp, Warning, TEXT("CarVel at Dash : %.2f"), AccelToDashRatio);
+	return 0.;
+}
+
 
 void ACar::PossessedBy(AController* NewController)
 {	
