@@ -8,10 +8,13 @@ ASmasherTrap::ASmasherTrap()
 	
 	_leftBlock = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftBlock"));
 	_leftBlock->SetCollisionProfileName(FName("BlockOnlyPawn"));
+	_leftBlock->SetMobility(EComponentMobility::Movable);
+	//_leftBlock->SetRelativeLocation();
 	_leftBlock->SetupAttachment(_rootScene);
 
 	_rightBlock = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightBlock"));
 	_rightBlock->SetCollisionProfileName(FName("BlockOnlyPawn"));
+	_rightBlock->SetMobility(EComponentMobility::Movable);
 	_rightBlock->SetupAttachment(_rootScene);
 }
 
