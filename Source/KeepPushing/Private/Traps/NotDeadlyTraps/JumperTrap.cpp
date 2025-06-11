@@ -8,7 +8,7 @@ AJumperTrap::AJumperTrap()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	_trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
-	_trigger->SetupAttachment(RootComponent);
+	_trigger->SetupAttachment(_rootScene);
 }
 
 void AJumperTrap::BeginPlay()
@@ -19,9 +19,9 @@ void AJumperTrap::BeginPlay()
 	{
 		_trigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		_trigger->SetCollisionObjectType(ECC_WorldDynamic);
-		_trigger->SetCollisionResponseToAllChannels(ECR_Block);
-		_trigger->SetGenerateOverlapEvents(false);
-		_trigger->OnComponentHit.AddDynamic(this, &AJumperTrap::OnComponentHit);
+		_trigger->SetCollisionResponseToAllChannels(ECR_Overlap);
+		_trigger->SetGenerateOverlapEvents(true);
+		_trigger->OnComponentBeginOverlap.AddDynamic(this, &AJumperTrap::OnComponentBeginOverlap);
 	}
 }
 
@@ -56,13 +56,14 @@ void AJumperTrap::AffectPlayer(AActor* player)
 	}*/
 }
 
-void AJumperTrap::OnComponentHit(
-	UPrimitiveComponent* hitComponent,
-	AActor* otherActor,
-	UPrimitiveComponent* otherComp,
-	FVector normalImpulse,
-	const FHitResult& hit
-)
+void AJumperTrap::OnComponentBeginOverlap(
+		UPrimitiveComponent* overlappedComponent,
+		AActor* otherActor,
+		UPrimitiveComponent* otherComp,
+		int32 otherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& sweepResult
+	)
 {
 	if (!otherActor || otherActor == this)
 	{
