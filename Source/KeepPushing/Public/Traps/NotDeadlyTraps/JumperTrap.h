@@ -26,11 +26,12 @@ protected:
 	virtual void AffectPlayer(AActor* player) override;
 
 	UFUNCTION()
-	void OnComponentHit(
-		UPrimitiveComponent* hitComponent,
+	void OnComponentBeginOverlap(
+		UPrimitiveComponent* overlappedComponent,
 		AActor* otherActor,
 		UPrimitiveComponent* otherComp,
-		FVector normalImpulse,
-		const FHitResult& hit
+		int32 otherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& sweepResult
 	);
 };

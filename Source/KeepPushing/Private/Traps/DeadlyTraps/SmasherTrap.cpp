@@ -95,7 +95,7 @@ void ASmasherTrap::Tick(float DeltaTime)
 
 void ASmasherTrap::Activate()
 {
-	UE_LOG(LogTemp, Error, TEXT("SMASHER: ACTIVATED!"));
+	//UE_LOG(LogTemp, Error, TEXT("SMASHER: ACTIVATED!"));
 
 	_isActivated = true;
 
@@ -104,7 +104,7 @@ void ASmasherTrap::Activate()
 
 void ASmasherTrap::Deactivate()
 {
-	UE_LOG(LogTemp, Error, TEXT("SMASHER: DEACTIVATED!"));
+	//UE_LOG(LogTemp, Error, TEXT("SMASHER: DEACTIVATED!"));
 
 	_isActivated = false;
 	_timer = _activationDuration;
