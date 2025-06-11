@@ -23,7 +23,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeadlyTrap")
 	USceneComponent* _rootScene = nullptr;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeadlyTrap")

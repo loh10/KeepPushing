@@ -6,7 +6,7 @@ ADeadlyTrap::ADeadlyTrap()
 	PrimaryActorTick.bCanEverTick = true;
 
 	_rootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
-	_rootScene->SetupAttachment(RootComponent);
+	SetRootComponent(_rootScene);
 }
 
 void ADeadlyTrap::BeginPlay()

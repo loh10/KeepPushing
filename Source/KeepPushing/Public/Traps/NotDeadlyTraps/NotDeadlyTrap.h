@@ -13,7 +13,9 @@ class KEEPPUSHING_API ANotDeadlyTrap : public ATrap
 public:
 	ANotDeadlyTrap();
 
-protected:	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DeadlyTrap")
+	USceneComponent* _rootScene = nullptr;
 
 	virtual void AffectPlayer(AActor* player);
 };

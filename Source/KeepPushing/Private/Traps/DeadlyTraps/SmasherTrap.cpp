@@ -7,10 +7,15 @@ ASmasherTrap::ASmasherTrap()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	_leftBlock = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftBlock"));
-	_leftBlock->SetupAttachment(RootComponent);
+	_leftBlock->SetCollisionProfileName(FName("BlockOnlyPawn"));
+	_leftBlock->SetMobility(EComponentMobility::Movable);
+	//_leftBlock->SetRelativeLocation();
+	_leftBlock->SetupAttachment(_rootScene);
 
 	_rightBlock = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightBlock"));
-	_rightBlock->SetupAttachment(RootComponent);
+	_rightBlock->SetCollisionProfileName(FName("BlockOnlyPawn"));
+	_rightBlock->SetMobility(EComponentMobility::Movable);
+	_rightBlock->SetupAttachment(_rootScene);
 }
 
 void ASmasherTrap::BeginPlay()
@@ -31,8 +36,18 @@ void ASmasherTrap::BeginPlay()
 
 		FVector middle  = (_leftStart + _rightStart) / 2.f;
 
-		_rightStop = middle + (rightBox.GetExtent().X) * -_rightBlock->GetComponentQuat().GetForwardVector();
-		_leftStop = middle + (leftBox.GetExtent().X) * -_leftBlock->GetComponentQuat().GetForwardVector();
+		float gap = 100.f; // Par exemple, 20 Unreal Units d’écart
+
+		// Vectors qui vont du centre vers chaque bloc
+		FVector dirLeft = (_leftStart - middle).GetSafeNormal();
+		FVector dirRight = (_rightStart - middle).GetSafeNormal();
+
+		float leftExtent = leftBox.GetExtent().X;
+		float rightExtent = rightBox.GetExtent().X;
+
+		// Le stop doit être le centre + la moitié du bloc + la moitié de l’autre bloc + gap/2
+		_leftStop = middle + dirLeft * (leftExtent + rightExtent + gap);
+		_rightStop = middle + dirRight * (leftExtent + rightExtent + gap);
 	}
 
 #if WITH_EDITOR	
@@ -80,7 +95,7 @@ void ASmasherTrap::Tick(float DeltaTime)
 
 void ASmasherTrap::Activate()
 {
-	UE_LOG(LogTemp, Error, TEXT("SMASHER: ACTIVATED!"));
+	//UE_LOG(LogTemp, Error, TEXT("SMASHER: ACTIVATED!"));
 
 	_isActivated = true;
 
@@ -89,7 +104,7 @@ void ASmasherTrap::Activate()
 
 void ASmasherTrap::Deactivate()
 {
-	UE_LOG(LogTemp, Error, TEXT("SMASHER: DEACTIVATED!"));
+	//UE_LOG(LogTemp, Error, TEXT("SMASHER: DEACTIVATED!"));
 
 	_isActivated = false;
 	_timer = _activationDuration;
