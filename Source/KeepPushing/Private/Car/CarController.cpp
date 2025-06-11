@@ -71,14 +71,25 @@ void ACarController::BindTriggerEvent(const EStartFinishType Type)
 
 void ACarController::ShowEndingUI()
 {
+    bShowMouseCursor = true;
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    InputMode.SetHideCursorDuringCapture(false);
+
+    SetInputMode(InputMode);
+    
     if (!EndingUIInstance && EndingUIClass)
     {
         EndingUIInstance = CreateWidget<UEndingUI>(this, EndingUIClass);
     }
     if (EndingUIInstance && !EndingUIInstance->IsInViewport())
     {
-        EndingUIInstance->AddToViewport();
+        EndingUIInstance->AddToViewport(9999);
+        InputMode.SetWidgetToFocus(EndingUIInstance->TakeWidget());
+        SetInputMode(InputMode);
     }
+    
 }
 
 void ACarController::HideEndingUI()
