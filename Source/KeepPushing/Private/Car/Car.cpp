@@ -99,6 +99,10 @@ void ACar::Tick(float DeltaTime)
 		Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
 		Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
 	}
+	// Debug arrow for Box->GetForwardVector
+	const FVector StartLocation = Box->GetComponentLocation();
+	const FVector EndLocation = StartLocation + (Box->GetForwardVector() * 1000.f); // Adjust length as needed
+	UKismetSystemLibrary::DrawDebugArrow(this, StartLocation, EndLocation, 10.f, FColor::Yellow, 0.f);
 }
 
 void ACar::CalcDashForce()
