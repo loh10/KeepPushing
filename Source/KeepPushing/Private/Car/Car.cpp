@@ -88,12 +88,10 @@ void ACar::Tick(float DeltaTime)
 
 	if (!bFullGrounded && bIsDashing && bCanDash)
 	{
-		Box->SetAllPhysicsLinearVelocity(FVector::Zero());
-
-		const FVector ForceVector = Box->GetForwardVector();
-		Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.X, DashForce.Z), EName::None, true);
-		bCanDash = false;
+		//const FVector ForceVector = Box->GetForwardVector();
+		//Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.X, DashForce.Z), EName::None, true);
 		CalcDashForce();
+		bCanDash = false;
 	}
 	else if (bIsJumping && bFullGrounded)
 	{
@@ -103,11 +101,17 @@ void ACar::Tick(float DeltaTime)
 	}
 }
 
-float ACar::CalcDashForce()
+void ACar::CalcDashForce()
 {
-	float AccelToDashRatio = Box->GetPhysicsLinearVelocity().X/3000;
-	UE_LOG(LogTemp, Warning, TEXT("CarVel at Dash : %.2f"), AccelToDashRatio);
-	return 0.;
+	float CurrentVelLength = Box->GetComponentVelocity().Length();
+	float VelDashRatio = FMath::Clamp(CurrentVelLength/(TopSpeed/2),0,1);
+	float DashCurveForce = DashCurve->GetFloatValue(VelDashRatio);
+	UE_LOG(LogTemp, Warning, TEXT("Dash Vel length : %f"), CurrentVelLength);
+	UE_LOG(LogTemp, Warning, TEXT("Dash Vel Ratio : %f"), VelDashRatio);
+	UE_LOG(LogTemp, Warning, TEXT("Ensuing Dash Force : %f"), DashCurveForce);
+	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
+	const FVector ForceVector = Box->GetForwardVector();
+	Box->AddForce(ForceVector * FVector(DashCurveForce, DashCurveForce, DashForce.Z), EName::None, true);
 }
 
 

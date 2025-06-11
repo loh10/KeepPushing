@@ -65,7 +65,7 @@ private:
 
 	void DashActionReleased(const FInputActionValue& Value);
 
-	float CalcDashForce();
+	void CalcDashForce();
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "Car|Input")
@@ -104,6 +104,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
 	TObjectPtr<UCurveFloat> AvailableTorqueCurve;
+	
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UCurveFloat> DashCurve;
 
 	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
 	float AccelerationForce = 8000.f;
