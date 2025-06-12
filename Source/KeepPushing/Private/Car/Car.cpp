@@ -24,6 +24,7 @@ ACar::ACar()
 	SetRootComponent(Box);
 
 	Chassie = CreateDefaultSubobject<UStaticMeshComponent>("Chassie");
+	Chassie->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	Chassie->SetupAttachment(Box);
 
 	FL_Wheel = CreateDefaultSubobject<USceneComponent>("FL_Wheel");
