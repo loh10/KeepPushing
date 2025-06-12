@@ -1,5 +1,7 @@
 ﻿#include "StartAndFinish/StartAndFinish.h"
 
+#include "Sound/SoundManager.h"
+
 
 AStartAndFinish::AStartAndFinish()
 {
@@ -56,6 +58,7 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 				FColor::Blue,
 				FString::Printf(TEXT("Finish Collided with: %s"), *otherActor->GetName())
 				);*/
+			USoundManager::Get(this)->Play2DSound("Win"); //Only for sound testing
 			break;
 
 		default:
