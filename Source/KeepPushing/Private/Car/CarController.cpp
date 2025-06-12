@@ -79,23 +79,19 @@ void ACarController::ShowEndingUI()
 
     SetInputMode(InputMode);
     
-    if (!EndingUIInstance && EndingUIClass)
-    {
-        EndingUIInstance = CreateWidget<UEndingUI>(this, EndingUIClass);
-    }
     if (EndingUIInstance && !EndingUIInstance->IsInViewport())
     {
-        EndingUIInstance->AddToViewport(9999);
+        EndingUIInstance->SetVisibility(ESlateVisibility::Visible);
         InputMode.SetWidgetToFocus(EndingUIInstance->TakeWidget());
         SetInputMode(InputMode);
     }
-    
+
 }
 
 void ACarController::HideEndingUI()
 {
     if (EndingUIInstance && EndingUIInstance->IsInViewport())
     {
-        EndingUIInstance->RemoveFromParent();
+        EndingUIInstance->SetVisibility(ESlateVisibility::Collapsed);
     }
 }
