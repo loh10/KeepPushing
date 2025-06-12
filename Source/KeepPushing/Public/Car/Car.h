@@ -26,7 +26,10 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* Input) override;
 
 	UFUNCTION()
-	void Kill(AActor* victim);	
+	void Kill(AActor* victim);
+
+	UFUNCTION(BlueprintCallable, Category = "Car|Runtime")
+	void MultiplySpeed(float Factor);
 
 private:
 	void HandleWheelForce(const USceneComponent* CurrentWheel);
@@ -188,7 +191,7 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	FVector DashForce = FVector(13000.f, 0.f, 0.f);
-
+	
 	UPROPERTY(EditAnywhere)
 	FTransform _startTransform;
 };
