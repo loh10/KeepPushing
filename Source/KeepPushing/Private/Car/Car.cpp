@@ -9,6 +9,7 @@
 #include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
+#include "Sound/SoundManager.h"
 #include "Traps/DeadlyTraps/SmasherTrap.h"
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "VoidZone/VoidZone.h"
@@ -70,6 +71,7 @@ void ACar::Kill(AActor* victim)
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());
 	Box->SetWorldTransform(_startTransform);
+	USoundManager::Get(this)->Play2DSound("Explosion");
 }
 
 void ACar::Tick(float DeltaTime)
