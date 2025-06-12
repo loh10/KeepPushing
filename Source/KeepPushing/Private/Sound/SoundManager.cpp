@@ -54,6 +54,7 @@ void USoundManager::Initialize(FSubsystemCollectionBase& Collection)
 
 
 void USoundManager::Play2DSound(FName SoundName)
+// SoundName should be the same as one of the sounds in the Sound Library
 {
 	if (USoundBase** Found = SoundMap.Find(SoundName))
 	{
@@ -70,6 +71,7 @@ void USoundManager::PlaySoundAtLocation(FName SoundName, FVector Location)
 }
 
 USoundManager* USoundManager::Get(UObject* Context)
+// Use this when you want to call the Sound Manager
 {
 	if (!Context) return nullptr;
 
@@ -109,6 +111,7 @@ void USoundManager::SetMasterVolume(float Volume)
 }
 
 void USoundManager::SaveVolumeToDisk()
+// Only called when you quit the settings menu to reduce disk usage
 {
 	UGamePrefSave* Save = Cast<UGamePrefSave>(
 		UGameplayStatics::CreateSaveGameObject(UGamePrefSave::StaticClass()));
