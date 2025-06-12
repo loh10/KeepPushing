@@ -34,6 +34,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetMasterVolume(float Volume);
 
+	UFUNCTION(BlueprintCallable)
+	void SaveVolumeToDisk();
+
 	UPROPERTY(BlueprintReadWrite)
 	float GlobalVolume;
 

@@ -4,6 +4,7 @@
 #include "Sound/SoundManager.h"
 
 #include "AudioDevice.h"
+#include "GameSave/GamePrefSave.h"
 #include "Sound/SoundMix.h"
 #include "Sound/SoundClass.h"
 #include "Kismet/GameplayStatics.h"
@@ -21,6 +22,7 @@ void USoundManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
+	//Load all the sounds
 	if (SoundLibrary)
 	{
 		for (const FNamedSound& Entry : SoundLibrary->Sounds)
@@ -35,6 +37,18 @@ void USoundManager::Initialize(FSubsystemCollectionBase& Collection)
 			SoundMap.Add(Entry.Name,Entry.Sound);
 		}
 	}
+
+	//Load saved settings
+	UGamePrefSave* Save = Cast<UGamePrefSave>(
+		UGameplayStatics::LoadGameFromSlot(TEXT("SettingsSlot"),0));
+
+	float Volume = 1.0f;
+	if (Save)
+	{
+		Volume = Save->MasterVolume;
+	}
+
+	SetMasterVolume(Volume);
 }
 
 
@@ -92,6 +106,17 @@ void USoundManager::SetMasterVolume(float Volume)
 	UGameplayStatics::PushSoundMixModifier(this, MasterMix);
 	GlobalVolume = Volume;
 	
+}
+
+void USoundManager::SaveVolumeToDisk()
+{
+	UGamePrefSave* Save = Cast<UGamePrefSave>(
+		UGameplayStatics::CreateSaveGameObject(UGamePrefSave::StaticClass()));
+
+	if (!Save) return;
+
+	Save->MasterVolume = GlobalVolume;
+	UGameplayStatics::SaveGameToSlot(Save, TEXT("SettingsSlot"), 0);
 }
 
 
