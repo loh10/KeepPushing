@@ -20,6 +20,7 @@ ACar::ACar()
 	PrimaryActorTick.bCanEverTick = true;
 
 	Box = CreateDefaultSubobject<UBoxComponent>("Box");
+	Box->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	SetRootComponent(Box);
 
 	Chassie = CreateDefaultSubobject<UStaticMeshComponent>("Chassie");
@@ -70,6 +71,15 @@ void ACar::Kill(AActor* victim)
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());
 	Box->SetWorldTransform(_startTransform);
+}
+
+void ACar::MultiplySpeed(float Factor)
+{
+	if (!Box->IsSimulatingPhysics())
+		return;
+		
+	FVector Velocity = Box->GetPhysicsLinearVelocity();
+	Box->SetPhysicsLinearVelocity(Velocity * Factor);
 }
 
 void ACar::Tick(float DeltaTime)
