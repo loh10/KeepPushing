@@ -18,7 +18,7 @@ public:
 	ACar();
 
 	virtual void BeginPlay() override;
-	
+
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -43,7 +43,7 @@ private:
 	void CalculateLateralSlipping(const USceneComponent* CurrentWheel);
 
 	void CalcJump(const USceneComponent* CurrentWheel, const float OutDistance);
-	
+
 	void ThrottleActionTriggered(const FInputActionValue& Value);
 
 	void ThrottleActionComplete(const FInputActionValue& Value);
@@ -51,7 +51,7 @@ private:
 	void BrakeActionTriggered(const FInputActionValue& Value);
 
 	void BrakeActionComplete(const FInputActionValue& Value);
-	
+
 	void TurnActionTriggered(const FInputActionValue& Value);
 
 	void DriftActionPressed(const FInputActionValue& Value);
@@ -69,7 +69,7 @@ private:
 	void DashActionReleased(const FInputActionValue& Value);
 
 	void CalcDashForce();
-	
+
 public:
 	UPROPERTY(EditAnywhere, Category = "Car|Input")
 	TObjectPtr<UInputMappingContext> MappingContext;
@@ -94,105 +94,130 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Car|Input")
 	TObjectPtr<UInputAction> DashAction;
-	
+
 private:
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Input value for acceleration."))
 	float AccelerationInput;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Input value for braking."))
 	float BrakeInput;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Maximum speed the car can reach."))
 	float TopSpeed = 1000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+		meta = (ToolTip = "Force applied to stabilize the car when it tilts."))
+	float StabilizationForce = 5000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+		meta = (ToolTip = "Speed threshold above which additional stabilization is applied."))
+	float HighSpeedThreshold = 1000.f;
+
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+		meta = (ToolTip = "Factor controlling the stabilization force based on speed."))
+	float SpeedStabilizationFactor = 0.1f;
+
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+		meta = (ToolTip = "Downward force applied to stabilize the car at high speeds."))
+	float DownforceFactor = 50.f;
+
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+		meta = (ToolTip = "Maximum angular velocity allowed to prevent flipping."))
+	float MaxAngularVelocity = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward",
+		meta = (ToolTip = "Curve defining the available torque based on speed."))
 	TObjectPtr<UCurveFloat> AvailableTorqueCurve;
-	
-	UPROPERTY(EditAnywhere)
+
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Curve defining the force applied during a dash."))
 	TObjectPtr<UCurveFloat> DashCurve;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Force applied to accelerate the car."))
 	float AccelerationForce = 8000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Force applied to decelerate the car."))
 	float DecelerationForce = 10000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Force applied when braking."))
 	float BrakeForce = 6000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Forward / Backward")
+	UPROPERTY(EditAnywhere, Category = "Forward / Backward",
+		meta = (ToolTip = "Force applied to counteract movement in the opposite direction."))
 	float OppositeBreakForce = 10000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Suspension")
+	UPROPERTY(EditAnywhere, Category = "Suspension", meta = (ToolTip = "Resting distance of the suspension."))
 	float SuspensionRestDistance = 35.f;
 
-	UPROPERTY(EditAnywhere, Category = "Suspension")
+	UPROPERTY(EditAnywhere, Category = "Suspension", meta = (ToolTip = "Force applied by the suspension spring."))
 	float SpringForce = 25000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Suspension")
+	UPROPERTY(EditAnywhere, Category = "Suspension",
+		meta = (ToolTip = "Damping force applied by the suspension spring."))
 	float SpringDamper = 18000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Suspension")
+	UPROPERTY(EditAnywhere, Category = "Suspension", meta = (ToolTip = "Array of suspension components for the car."))
 	TArray<TWeakObjectPtr<USceneComponent>> SuspensionArray;
 
-	UPROPERTY(EditAnywhere, Category = "Lateral Slipping")
+	UPROPERTY(EditAnywhere, Category = "Lateral Slipping",
+		meta = (ToolTip = "Mass of the tires, affecting lateral slipping."))
 	float TireMass = 1.f;
 
-	UPROPERTY(EditAnywhere, Category = "Lateral Slipping")
+	UPROPERTY(EditAnywhere, Category = "Lateral Slipping", meta = (ToolTip = "Torque applied when turning the car."))
 	float TurnTorque = 1000000.f;
 
-	UPROPERTY(EditAnywhere, Category = "Lateral Slipping")
+	UPROPERTY(EditAnywhere, Category = "Lateral Slipping", meta = (ToolTip = "Input value for steering."))
 	float SteeringInput;
 
-	UPROPERTY(EditAnywhere, Category = "Lateral Slipping")
+	UPROPERTY(EditAnywhere, Category = "Lateral Slipping",
+		meta = (ToolTip = "Factor controlling the grip of the tires."))
 	float GripFactor = .5f;
 
-	UPROPERTY(EditAnywhere, Category = "Lateral Slipping")
+	UPROPERTY(EditAnywhere, Category = "Lateral Slipping",
+		meta = (ToolTip = "Indicates whether the car is currently drifting."))
 	bool bIsDrifting;
 
-	UPROPERTY(EditAnywhere, Category = "Component")
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Camera component attached to the car."))
 	TObjectPtr<UCameraComponent> Camera;
 
-	UPROPERTY(EditAnywhere, Category = "Component")
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Spring arm component for the camera."))
 	TObjectPtr<USpringArmComponent> SpringArm;
 
-	UPROPERTY(EditAnywhere, Category = "Component")
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Back-right wheel component."))
 	TObjectPtr<USceneComponent> BR_Wheel;
-	
-	UPROPERTY(EditAnywhere, Category = "Component")
+
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Back-left wheel component."))
 	TObjectPtr<USceneComponent> BL_Wheel;
-	
-	UPROPERTY(EditAnywhere, Category = "Component")
+
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Front-right wheel component."))
 	TObjectPtr<USceneComponent> FR_Wheel;
-	
-	UPROPERTY(EditAnywhere, Category = "Component")
+
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Front-left wheel component."))
 	TObjectPtr<USceneComponent> FL_Wheel;
 
-	UPROPERTY(EditAnywhere, Category = "Component")
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Box component representing the car's body."))
 	TObjectPtr<UBoxComponent> Box;
 
-	UPROPERTY(EditAnywhere, Category = "Component")
+	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Static mesh representing the car's chassis."))
 	TObjectPtr<UStaticMeshComponent> Chassie;
-	
-	UPROPERTY(EditAnywhere)
+
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Force applied when the car jumps."))
 	float JumpForce = 2200000.f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether all wheels are grounded."))
 	bool bFullGrounded;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether the car can dash."))
 	bool bCanDash;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether the car is currently jumping."))
 	bool bIsJumping;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether the car is currently dashing."))
 	bool bIsDashing;
-	
-	UPROPERTY(EditAnywhere)
+
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Force vector applied during a dash."))
 	FVector DashForce = FVector(13000.f, 0.f, 0.f);
-	
-	UPROPERTY(EditAnywhere)
+
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Initial transform of the car."))
 	FTransform _startTransform;
 };
-

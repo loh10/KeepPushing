@@ -21,6 +21,7 @@ ACar::ACar()
 
 	Box = CreateDefaultSubobject<UBoxComponent>("Box");
 	Box->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
+	Box->SetCenterOfMass(FVector(0.f, 0.f, -50.f));
 	SetRootComponent(Box);
 
 	Chassie = CreateDefaultSubobject<UStaticMeshComponent>("Chassie");
@@ -85,37 +86,61 @@ void ACar::MultiplySpeed(float Factor)
 
 void ACar::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-	bFullGrounded = true;
-	for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
-	{
-		HandleWheelForce(Element.Get());
-	}
+    Super::Tick(DeltaTime);
+    bFullGrounded = true;
+    for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
+    {
+        HandleWheelForce(Element.Get());
+    }
 
-	if (bFullGrounded)
-	{
-		bCanDash = true;
-	}
+    if (bFullGrounded)
+    {
+        bCanDash = true;
+    }
 
-	if (!bFullGrounded && bIsDashing && bCanDash)
-	{
-		//const FVector ForceVector = Box->GetForwardVector();
-		//Box->AddForce(ForceVector * FVector(DashForce.X, DashForce.X, DashForce.Z), EName::None, true);
-		CalcDashForce();
-		bCanDash = false;
-	}
-	else if (bIsJumping && bFullGrounded)
-	{
-		const FVector CurrentVelocity = Box->GetComponentVelocity();
-		Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
-		Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
-	}
-	// Debug arrow for Box->GetForwardVector
-	const FVector StartLocation = Box->GetComponentLocation();
-	const FVector EndLocation = StartLocation + (Box->GetForwardVector() * 1000.f); // Adjust length as needed
-	UKismetSystemLibrary::DrawDebugArrow(this, StartLocation, EndLocation, 10.f, FColor::Yellow, 0.f);
+    if (!bFullGrounded && bIsDashing && bCanDash)
+    {
+        CalcDashForce();
+        bCanDash = false;
+    }
+    else if (bIsJumping && bFullGrounded)
+    {
+        const FVector CurrentVelocity = Box->GetComponentVelocity();
+        Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
+        Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
+    }
+
+    // Stabilisation anti-renversement
+    FVector UpVector = Box->GetUpVector();
+    float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
+    if (RollAngle > KINDA_SMALL_NUMBER) // Si la voiture est inclinée
+    {
+        FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
+        Box->AddTorqueInRadians(StabilizingTorque);
+    }
+
+    // Stabilisation supplémentaire basée sur la vitesse
+    float Speed = Box->GetPhysicsLinearVelocity().Size();
+    if (Speed > HighSpeedThreshold) // Si la vitesse dépasse un seuil
+    {
+        FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->GetRightVector();
+        FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
+        Box->AddForce(CounterForce);
+    }
+
+    // Downforce to stabilize at high speeds
+    if (Speed > 0.f)
+    {
+        FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
+        Box->AddForce(Downforce);
+    }
+
+    // Clamp angular velocity to prevent flipping
+    FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
+    AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
+    AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
+    Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
 }
-
 void ACar::CalcDashForce()
 {
 	float CurrentVelLength = Box->GetComponentVelocity().Length();
@@ -193,7 +218,6 @@ void ACar::HandleWheelForce(const USceneComponent* CurrentWheel)
 			CalcAcceleration(CurrentWheel);
 			CalcBrake(CurrentWheel);
 			CalculateLateralSlipping(CurrentWheel);
-			// CalcJump(CurrentWheel, HitDistance);
 		}
 		else
 		{
@@ -357,9 +381,9 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 	if (PlaneVelocity.Length() < 10.f) {
 		return;
 	}
-	
+
 	SteeringInput = Value.Get<float>();
-	
+
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
 		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
