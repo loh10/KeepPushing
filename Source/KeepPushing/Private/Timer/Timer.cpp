@@ -16,9 +16,23 @@ void ATimer::BeginPlay()
 	bRunning = false;
 }
 
-void ATimer::StartTimer() { bRunning = true; }
-void ATimer::StopTimer()  { bRunning = false; }
-void ATimer::ResetTimer() { Elapsed = 0.f; }
+void ATimer::StartTimer()
+{
+	bRunning = true;
+	OnStart.Broadcast();
+}
+
+void ATimer::StopTimer()
+{
+	bRunning = false;
+	OnStop.Broadcast();
+}
+
+void ATimer::ResetTimer()
+{
+	Elapsed = 0.f;
+	OnRestart.Broadcast();
+}
 
 void ATimer::Tick(float DeltaTime)
 {
