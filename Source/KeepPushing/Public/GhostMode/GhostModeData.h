@@ -7,8 +7,10 @@ USTRUCT()
 struct FGhostModePoint
 {
 	GENERATED_BODY()
-	
-	explicit FGhostModePoint() = default;
+	FGhostModePoint()
+		: Position(FVector::ZeroVector), Rotator(FRotator::ZeroRotator)
+	{
+	}
 	explicit FGhostModePoint(const FTransform transform)
 	{
 		Position = transform.GetLocation();
@@ -26,7 +28,7 @@ USTRUCT()
 struct FTrace
 {
 	GENERATED_BODY()
-
+	
 	UPROPERTY(VisibleAnywhere)
 	TArray<FGhostModePoint> Points;
 
