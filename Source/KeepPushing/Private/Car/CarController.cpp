@@ -92,6 +92,6 @@ void ACarController::HideEndingUI()
 {
     if (EndingUIInstance && EndingUIInstance->IsInViewport())
     {
-        EndingUIInstance->SetVisibility(ESlateVisibility::Collapsed);
+        EndingUIInstance->SetVisibility(ESlateVisibility::Hidden);
     }
 }
