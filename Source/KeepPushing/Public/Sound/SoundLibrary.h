@@ -7,14 +7,16 @@
 #include "Sound/SoundBase.h"
 #include "SoundLibrary.generated.h"
 
-/**
- * 
- */
 
 USTRUCT(BlueprintType)
 struct FNamedSound
 {
 	GENERATED_BODY()
+
+	FNamedSound()
+	   : Sound(nullptr)
+	{
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName Name;

@@ -21,7 +21,6 @@ ACar::ACar()
 
 	Box = CreateDefaultSubobject<UBoxComponent>("Box");
 	Box->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
-	Box->SetCenterOfMass(FVector(0.f, 0.f, -50.f));
 	SetRootComponent(Box);
 
 	Chassie = CreateDefaultSubobject<UStaticMeshComponent>("Chassie");
@@ -53,6 +52,7 @@ ACar::ACar()
 void ACar::BeginPlay()
 {
 	Super::BeginPlay();
+	Box->SetCenterOfMass(FVector(0.f, 0.f, -50.f));
 	_startTransform = Box->GetComponentTransform();
 	for (TActorIterator<ASmasherTrap> It(GetWorld()); It; ++It)
 	{
