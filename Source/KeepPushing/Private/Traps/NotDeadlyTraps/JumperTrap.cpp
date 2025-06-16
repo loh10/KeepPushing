@@ -1,7 +1,10 @@
 ﻿#include "Traps/NotDeadlyTraps/JumperTrap.h"
 
+#include "Car/Car.h"
 #include "Components/BoxComponent.h"
 
+
+class ACar;
 
 AJumperTrap::AJumperTrap()
 {
@@ -9,6 +12,7 @@ AJumperTrap::AJumperTrap()
 	
 	_trigger = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger"));
 	_trigger->SetupAttachment(_rootScene);
+
 }
 
 void AJumperTrap::BeginPlay()
@@ -23,37 +27,36 @@ void AJumperTrap::BeginPlay()
 		_trigger->SetGenerateOverlapEvents(true);
 		_trigger->OnComponentBeginOverlap.AddDynamic(this, &AJumperTrap::OnComponentBeginOverlap);
 	}
+
+	_hasJumped = false;
 }
 
-void AJumperTrap::AffectPlayer(AActor* player)
+void AJumperTrap::AffectPlayer(AActor* other)
 {
 	// Example: Launch the player upwards (works for Pawn or custom car actor)
-	if (!player) return;
+	if (!other) return;
 
-	UPrimitiveComponent* rootComp = Cast<UPrimitiveComponent>(player->GetRootComponent());
-	if (rootComp && rootComp->IsSimulatingPhysics())
-	{
-		FVector impulse = FVector(0.f, 0.f, _jumpForce);
-		rootComp->AddImpulse(impulse, NAME_None, true);
+	ACar* vehicle = Cast<ACar>(other);
 
-		//UE_LOG(LogTemp, Warning, TEXT("JumperTrap applied impulse to %s"), *player->GetName());
-	}
-	else
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("JumperTrap: %s has no simulating physics!"), *player->GetName());
-	}
+	if (!vehicle)
+		return;
+
+	UPrimitiveComponent* rootComp = Cast<UPrimitiveComponent>(other->GetRootComponent());
+	if (!rootComp || !rootComp->IsSimulatingPhysics())
+		return;
 	
-	/*APawn* pawn = Cast<APawn>(player);
+	float SpeedFactor = FMath::Clamp(1.f - (_reduceSpeedPercent / 100.f), 0.f, 1.f);
+	vehicle->MultiplySpeed(SpeedFactor);
 	
-	if (pawn)
-	{
-		UPrimitiveComponent* pawnRoot = Cast<UPrimitiveComponent>(pawn->GetRootComponent());
-		if (pawnRoot && pawnRoot->IsSimulatingPhysics())
-		{
-			FVector impulse = FVector(0.f, 0.f, _jumpForce);
-			pawnRoot->AddImpulse(impulse, NAME_None, true);
-		}
-	}*/
+	if (_hasJumped)
+		return;
+	
+	FVector impulse = FVector(0.f, 0.f, _jumpForce);
+	rootComp->AddImpulse(impulse, NAME_None, true);
+
+	vehicle->bCanDash = false;
+
+	_hasJumped = true;
 }
 
 void AJumperTrap::OnComponentBeginOverlap(
@@ -69,9 +72,13 @@ void AJumperTrap::OnComponentBeginOverlap(
 	{
 		return;
 	}
-	
-	AffectPlayer(otherActor);
 
-	// You can play a sound, spawn effects, etc. here
-	//UE_LOG(LogTemp, Warning, TEXT("JumperTrap activated by: %s"), *otherActor->GetName());
+	FTimerHandle _delayTimer;
+	
+	GetWorldTimerManager().SetTimer(
+			_delayTimer,
+			FTimerDelegate::CreateUObject(this, &AJumperTrap::AffectPlayer, otherActor),
+			.1f,
+			false
+		);
 }

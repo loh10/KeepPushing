@@ -23,7 +23,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumperTrap")
 	float _jumpForce = 2000.f;
 
-	virtual void AffectPlayer(AActor* player) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "JumperTrap", meta = (ClampMin = "0", ClampMax = "100", UIMin = "0", UIMax = "100"))
+	float _reduceSpeedPercent = 90.f;
+
+	bool _hasJumped = false;
+	
+	virtual void AffectPlayer(AActor* other) override;	
 
 	UFUNCTION()
 	void OnComponentBeginOverlap(
