@@ -6,6 +6,8 @@
 
 class UTimerUserWidget;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimerSimple);
+
 UCLASS()
 class KEEPPUSHING_API ATimer : public AActor
 {
@@ -28,10 +30,20 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Timer")
 	float GetElapsed() const { return Elapsed; }
+
 	
-public:
+	UPROPERTY(BlueprintAssignable, Category="Timer|Events")
+	FOnTimerSimple OnStart;
+
+	UPROPERTY(BlueprintAssignable, Category="Timer|Events")
+	FOnTimerSimple OnStop;
+
+	UPROPERTY(BlueprintAssignable, Category="Timer|Events")
+	FOnTimerSimple OnRestart;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Timer|UI")
 	TSubclassOf<UTimerUserWidget> TimerWidgetClass;
+
 
 	UPROPERTY()
 	TObjectPtr<UTimerUserWidget> TimerWidget;

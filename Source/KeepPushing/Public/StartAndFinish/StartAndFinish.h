@@ -22,9 +22,12 @@ class KEEPPUSHING_API AStartAndFinish : public AActor
 public:
 	AStartAndFinish();
 
+	UPROPERTY(BlueprintAssignable, Category = "Trigger")
+	FOnTriggerEvent OnTriggerEvent;
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
@@ -34,16 +37,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
 	UBoxComponent* _boxTrigger;
 
-	
-public:
-	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger",
+		meta = (ToolTip = "Time in seconds"))
+	float _countDown = 3;
 
 	
-	UPROPERTY(BlueprintAssignable, Category = "Trigger")
-	FOnTriggerEvent OnTriggerEvent;
 	
-
-protected:
 	UFUNCTION()
 	void OnTriggerEnter(
 		UPrimitiveComponent* overlappedComponent,
