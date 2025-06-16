@@ -95,6 +95,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Car|Input")
 	TObjectPtr<UInputAction> DashAction;
 
+	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether the car can dash."))
+	bool bCanDash;
+
 private:
 	UPROPERTY(EditAnywhere, Category = "Forward / Backward", meta = (ToolTip = "Input value for acceleration."))
 	float AccelerationInput;
@@ -206,8 +209,6 @@ private:
 	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether all wheels are grounded."))
 	bool bFullGrounded;
 
-	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether the car can dash."))
-	bool bCanDash;
 
 	UPROPERTY(EditAnywhere, meta = (ToolTip = "Indicates whether the car is currently jumping."))
 	bool bIsJumping;
