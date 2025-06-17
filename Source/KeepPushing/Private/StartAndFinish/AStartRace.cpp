@@ -1,5 +1,6 @@
 ﻿#include "StartAndFinish/AStartRace.h"
 
+
 #include "Kismet/GameplayStatics.h"
 #include "Timer/Timer.h"
 
@@ -28,12 +29,15 @@ void AAStartRace::UpdateCountdown()
 {
 	if (_currentCount > 0)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("Countdown: %d"), _currentCount));
-		OnCountdownUpdated(_currentCount);
+		//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("Countdown: %d"), _currentCount));
+		FText countdownText = FText::AsNumber(_currentCount);
+		OnCountdownUpdated(countdownText);
 		--_currentCount;
 	}
 	else
 	{
+		FText goText = FText::FromString("GO");
+		OnCountdownUpdated(goText);
 		FinishCountdown();
 	}
 }
@@ -41,7 +45,7 @@ void AAStartRace::UpdateCountdown()
 void AAStartRace::FinishCountdown()
 {
 	GetWorldTimerManager().ClearTimer(_countdownTimer);
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("GO!"));
+	//GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("GO!"));
 	OnCountdownGo();
 	SetPlayerInputEnabled(true);
 
@@ -57,6 +61,21 @@ void AAStartRace::FinishCountdown()
 			Timer->StartTimer();
 		}
 	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Start Timer !"));
+	FTimerHandle HideUITimer;
+	GetWorldTimerManager().SetTimer(
+		HideUITimer,
+		this,
+		&AAStartRace::TriggerCountdownHide,
+		_countdownHideDelay,   // Délai avant de cacher (1 seconde ici, ajuste si besoin)
+		false
+	);
+}
+
+void AAStartRace::TriggerCountdownHide()
+{
+	OnCountdownHide();
 }
 
 void AAStartRace::SetPlayerInputEnabled(bool bEnabled)

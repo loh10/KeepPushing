@@ -21,6 +21,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Race|UI")
+	float _countdownHideDelay = 1.0f;
+	
 	UPROPERTY(EditAnywhere, Category = "Race")
 	int32 _countdownStart = 3;
 
@@ -33,10 +36,15 @@ protected:
 
 	void SetPlayerInputEnabled(bool enabled);
 
-	// (Optionnel) pour Widget
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnCountdownUpdated(int32 secondsLeft);
+	void OnCountdownUpdated(const FText& countdownText);
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnCountdownGo();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnCountdownHide();
+	
+	UFUNCTION()
+	void TriggerCountdownHide();
 };
