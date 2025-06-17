@@ -223,4 +223,5 @@ private:
 	FTransform _startTransform;
 
 	int currentWheelOnGround = 4;
+	bool bHasDashed = false;
 };

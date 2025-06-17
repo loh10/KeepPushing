@@ -94,21 +94,18 @@ void ACar::Tick(float DeltaTime)
 	if (currentWheelOnGround > 0)
 	{
 		bFullGrounded = true;
+		bHasDashed = false;
 	}
 	else
 	{
 		bFullGrounded = false;
 	}
 
-	if (!bFullGrounded)
-	{
-		bCanDash = true;
-	}
-
-	if (!bFullGrounded && bIsDashing && bCanDash)
+	if (!bFullGrounded && bCanDash)
 	{
 		CalcDashForce();
 		bCanDash = false;
+		bHasDashed = true;
 	}
 	else if (bIsJumping && bFullGrounded)
 	{
@@ -438,9 +435,12 @@ void ACar::JumpActionReleased(const FInputActionValue& Value)
 
 void ACar::DashActionPressed(const FInputActionValue& Value)
 {
-	bIsDashing = true;
+	if (!bFullGrounded && !bHasDashed)
+	{
+		bIsDashing = true;
+		bCanDash = true;
+	}
 }
-
 void ACar::DashActionReleased(const FInputActionValue& Value)
 {
 	bIsDashing = false;
