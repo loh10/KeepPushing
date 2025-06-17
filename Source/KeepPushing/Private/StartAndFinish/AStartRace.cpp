@@ -2,6 +2,7 @@
 
 
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundManager.h"
 #include "Timer/Timer.h"
 
 AAStartRace::AAStartRace()
@@ -71,6 +72,8 @@ void AAStartRace::FinishCountdown()
 		_countdownHideDelay,   // Délai avant de cacher (1 seconde ici, ajuste si besoin)
 		false
 	);
+
+	USoundManager::Get(this)->PlayMusic("GameMusic");
 }
 
 void AAStartRace::TriggerCountdownHide()

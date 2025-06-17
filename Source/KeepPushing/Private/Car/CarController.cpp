@@ -34,6 +34,7 @@ void ACarController::BeginPlay()
             HideEndingUI();
         }
     }
+    
 }
 
 
