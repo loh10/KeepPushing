@@ -221,4 +221,6 @@ private:
 
 	UPROPERTY(EditAnywhere, meta = (ToolTip = "Initial transform of the car."))
 	FTransform _startTransform;
+
+	int currentWheelOnGround = 4;
 };
