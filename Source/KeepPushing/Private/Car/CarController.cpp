@@ -7,7 +7,7 @@
 
 ACarController::ACarController()
 {
-    static ConstructorHelpers::FClassFinder<UEndingUI> WidgetClassFinder(TEXT("/Game/EndUI"));
+        static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClassFinder(TEXT("/Game/UI/EndUI.EndUI_C"));
     if (WidgetClassFinder.Succeeded())
     {
         EndingUIClass = WidgetClassFinder.Class;

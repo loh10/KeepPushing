@@ -1,16 +1,14 @@
 ﻿#include "Car/Car.h"
 
 #include "Car/CarController.h"
-#include "EnhancedInputSubsystems.h" 
+#include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetStringLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
 #include "Traps/DeadlyTraps/SmasherTrap.h"
-#include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "VoidZone/VoidZone.h"
 
 class ASmasherTrap;
@@ -41,7 +39,7 @@ ACar::ACar()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 	Camera->SetupAttachment(SpringArm);
-	
+
 	SuspensionArray.Empty(4);
 	SuspensionArray.Add(FL_Wheel);
 	SuspensionArray.Add(FR_Wheel);
@@ -79,72 +77,76 @@ void ACar::MultiplySpeed(float Factor)
 {
 	if (!Box->IsSimulatingPhysics())
 		return;
-		
+
 	FVector Velocity = Box->GetPhysicsLinearVelocity();
 	Box->SetPhysicsLinearVelocity(Velocity * Factor);
 }
 
 void ACar::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
-    bFullGrounded = true;
-    for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
-    {
-        HandleWheelForce(Element.Get());
-    }
+	Super::Tick(DeltaTime);
+	bFullGrounded = true;
+	currentWheelOnGround = 4;
+	for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
+	{
+		HandleWheelForce(Element.Get());
+	}
+	if (currentWheelOnGround > 0)
+	{
+		bFullGrounded = true;
+		bHasDashed = false;
+	}
+	else
+	{
+		bFullGrounded = false;
+	}
 
-    if (bFullGrounded)
-    {
-        bCanDash = true;
-    }
+	if (!bFullGrounded && bCanDash)
+	{
+		CalcDashForce();
+		bCanDash = false;
+		bHasDashed = true;
+	}
+	else if (bIsJumping && bFullGrounded)
+	{
+		const FVector CurrentVelocity = Box->GetComponentVelocity();
+		Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
+		Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
+	}
 
-    if (!bFullGrounded && bIsDashing && bCanDash)
-    {
-        CalcDashForce();
-        bCanDash = false;
-    }
-    else if (bIsJumping && bFullGrounded)
-    {
-        const FVector CurrentVelocity = Box->GetComponentVelocity();
-        Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
-        Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
-    }
+	FVector UpVector = Box->GetUpVector();
+	float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
+	if (RollAngle > KINDA_SMALL_NUMBER)
+	{
+		FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
+		Box->AddTorqueInRadians(StabilizingTorque);
+	}
 
-    // Stabilisation anti-renversement
-    FVector UpVector = Box->GetUpVector();
-    float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
-    if (RollAngle > KINDA_SMALL_NUMBER) // Si la voiture est inclinée
-    {
-        FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
-        Box->AddTorqueInRadians(StabilizingTorque);
-    }
+	float Speed = Box->GetPhysicsLinearVelocity().Size();
+	if (Speed > HighSpeedThreshold)
+	{
+		FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->
+			GetRightVector();
+		FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
+		Box->AddForce(CounterForce);
+	}
 
-    // Stabilisation supplémentaire basée sur la vitesse
-    float Speed = Box->GetPhysicsLinearVelocity().Size();
-    if (Speed > HighSpeedThreshold) // Si la vitesse dépasse un seuil
-    {
-        FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->GetRightVector();
-        FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
-        Box->AddForce(CounterForce);
-    }
+	if (Speed > 0.f)
+	{
+		FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
+		Box->AddForce(Downforce);
+	}
 
-    // Downforce to stabilize at high speeds
-    if (Speed > 0.f)
-    {
-        FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
-        Box->AddForce(Downforce);
-    }
-
-    // Clamp angular velocity to prevent flipping
-    FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
-    AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
-    AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
-    Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
+	FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
+	AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
+	AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
+	Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
 }
+
 void ACar::CalcDashForce()
 {
 	float CurrentVelLength = Box->GetComponentVelocity().Length();
-	float VelDashRatio = FMath::Clamp(CurrentVelLength/(TopSpeed/2),0,1);
+	float VelDashRatio = FMath::Clamp(CurrentVelLength / (TopSpeed / 2), 0, 1);
 	float DashCurveForce = DashCurve->GetFloatValue(VelDashRatio);
 	UE_LOG(LogTemp, Warning, TEXT("Dash Vel length : %f"), CurrentVelLength);
 	UE_LOG(LogTemp, Warning, TEXT("Dash Vel Ratio : %f"), VelDashRatio);
@@ -156,14 +158,14 @@ void ACar::CalcDashForce()
 
 
 void ACar::PossessedBy(AController* NewController)
-{	
+{
 	Super::PossessedBy(NewController);
-	
+
 	if (ACarController* PC = Cast<ACarController>(NewController))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
-		{	
+		{
 			Subsystem->AddMappingContext(MappingContext, 0);
 		}
 	}
@@ -179,7 +181,7 @@ void ACar::SetupPlayerInputComponent(UInputComponent* Input)
 
 		EnhancedInput->BindAction(BrakeAction, ETriggerEvent::Triggered, this, &ACar::BrakeActionTriggered);
 		EnhancedInput->BindAction(BrakeAction, ETriggerEvent::Completed, this, &ACar::BrakeActionComplete);
-		
+
 		EnhancedInput->BindAction(TurnAction, ETriggerEvent::Triggered, this, &ACar::TurnActionTriggered);
 
 		EnhancedInput->BindAction(DriftAction, ETriggerEvent::Started, this, &ACar::DriftActionPressed);
@@ -208,7 +210,7 @@ void ACar::HandleWheelForce(const USceneComponent* CurrentWheel)
 
 	FHitResult HitResult;
 	if (UKismetSystemLibrary::LineTraceSingle(this, Start, End, TraceTypeQuery1,
-		false, {}, EDrawDebugTrace::ForOneFrame,HitResult, true))
+	                                          false, {}, EDrawDebugTrace::ForOneFrame, HitResult, true))
 	{
 		if (HitResult.bBlockingHit)
 		{
@@ -221,12 +223,12 @@ void ACar::HandleWheelForce(const USceneComponent* CurrentWheel)
 		}
 		else
 		{
-			bFullGrounded = false;
+			currentWheelOnGround--;
 		}
 	}
 	else
 	{
-		bFullGrounded = false;
+		currentWheelOnGround--;
 	}
 }
 
@@ -237,14 +239,17 @@ void ACar::CalculateSuspension(const USceneComponent* CurrentWheel, const float 
 
 	const FVector Velocity = Box->GetPhysicsLinearVelocityAtPoint(WorldLocation);
 	FVector Force = UKismetMathLibrary::Multiply_VectorVector(UpVector,
-		FVector((SuspensionRestDistance - OutDistance) * SpringForce) - (SpringDamper *
-			UKismetMathLibrary::Dot_VectorVector(Velocity, UpVector)));
+	                                                          FVector(
+		                                                          (SuspensionRestDistance - OutDistance) * SpringForce)
+	                                                          - (SpringDamper *
+		                                                          UKismetMathLibrary::Dot_VectorVector(
+			                                                          Velocity, UpVector)));
 
 	Force = UKismetMathLibrary::Multiply_VectorVector(Force, FVector(UGameplayStatics::GetWorldDeltaSeconds(this)));
 	Box->AddForceAtLocation(Force, WorldLocation);
 
 	UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-		Force * FVector(0.005f) + WorldLocation, 0.f,FColor::Green);
+	                                     Force * FVector(0.005f) + WorldLocation, 0.f, FColor::Green);
 }
 
 void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
@@ -252,22 +257,27 @@ void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 	const FVector Velocity = Box->GetPhysicsLinearVelocity();
 	const FVector WorldLocation = CurrentWheel->GetComponentLocation();
 	const float CurrentForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), Velocity);
-	
+
 	if (AccelerationInput > 0.f)
 	{
 		if (CurrentForwardSpeed <= TopSpeed)
 		{
 			FVector Force = UKismetMathLibrary::Multiply_VectorVector(CurrentWheel->GetForwardVector(),
-				FVector(AccelerationForce));
-			
+			                                                          FVector(AccelerationForce));
+
 			Force = UKismetMathLibrary::Multiply_VectorVector(Force,
-				FVector(AccelerationInput * AvailableTorqueCurve->GetFloatValue(
-			UKismetMathLibrary::Clamp(UKismetMathLibrary::Abs(CurrentForwardSpeed) / TopSpeed, 0., 1.))));
-			
+			                                                  FVector(
+				                                                  AccelerationInput * AvailableTorqueCurve->
+				                                                  GetFloatValue(
+					                                                  UKismetMathLibrary::Clamp(
+						                                                  UKismetMathLibrary::Abs(CurrentForwardSpeed) /
+						                                                  TopSpeed, 0., 1.))));
+
 			Box->AddForceAtLocation(Force, WorldLocation);
 			UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-				WorldLocation + UKismetMathLibrary::Multiply_VectorVector(Force, FVector(0.01)),
-				25.f, FColor::Blue);
+			                                     WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
+				                                     Force, FVector(0.01)),
+			                                     25.f, FColor::Blue);
 		}
 	}
 	else
@@ -276,10 +286,10 @@ void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 		{
 			const FVector Force = FVector(AccelerationForce) * (CurrentWheel->GetForwardVector() * FVector(-1.f));
 			Box->AddForceAtLocation(Force, WorldLocation);
-			
+
 			UKismetSystemLibrary::DrawDebugArrow(this,
-				WorldLocation, WorldLocation + (Force * FVector(.01)),
-				25.f, FColor::Blue);
+			                                     WorldLocation, WorldLocation + (Force * FVector(.01)),
+			                                     25.f, FColor::Blue);
 		}
 	}
 }
@@ -289,38 +299,41 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 	const FVector Forward = CurrentWheel->GetForwardVector();
 	const FVector Velocity = Box->GetPhysicsLinearVelocity();
 	const FVector WorldLocation = CurrentWheel->GetComponentLocation();
-	
+
 	if (BrakeInput > 0.f)
 	{
 		const float CurrentForwardSpeed = UKismetMathLibrary::Dot_VectorVector(
 			Box->GetForwardVector() * FVector(-1.f), Velocity);
-		
+
 		if (CurrentForwardSpeed <= TopSpeed)
 		{
 			FVector Force = UKismetMathLibrary::Multiply_VectorVector(Forward, FVector(BrakeForce));
 			Force = UKismetMathLibrary::Multiply_VectorVector(Force,
-				FVector(BrakeInput * AvailableTorqueCurve->GetFloatValue(
-			UKismetMathLibrary::Clamp(UKismetMathLibrary::Abs(CurrentForwardSpeed) / TopSpeed, 0., 1.))));
+			                                                  FVector(BrakeInput * AvailableTorqueCurve->GetFloatValue(
+				                                                  UKismetMathLibrary::Clamp(
+					                                                  UKismetMathLibrary::Abs(CurrentForwardSpeed) /
+					                                                  TopSpeed, 0., 1.))));
 			Force *= -1.f;
-			
+
 			Box->AddForceAtLocation(Force, WorldLocation);
 			UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-				WorldLocation + UKismetMathLibrary::Multiply_VectorVector(Force, FVector(0.01)),
-				25.f, FColor::Blue);
+			                                     WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
+				                                     Force, FVector(0.01)),
+			                                     25.f, FColor::Blue);
 		}
 	}
 	else
 	{
 		const float CurrentForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), Velocity);
-		
+
 		if (CurrentForwardSpeed < -5.f)
 		{
 			const FVector Force = FVector(OppositeBreakForce) * Forward;
 			Box->AddForceAtLocation(Force, WorldLocation);
-			
+
 			UKismetSystemLibrary::DrawDebugArrow(this,
-				WorldLocation, WorldLocation + (Force * FVector(.01)),
-				25.f, FColor::Blue);
+			                                     WorldLocation, WorldLocation + (Force * FVector(.01)),
+			                                     25.f, FColor::Blue);
 		}
 	}
 }
@@ -328,19 +341,19 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 void ACar::CalculateLateralSlipping(const USceneComponent* CurrentWheel)
 {
 	GripFactor = bIsDrifting ? 0.1f : 0.5f;
-	
+
 	const FVector WorldLocation = CurrentWheel->GetComponentLocation();
 	const FVector RightVector = CurrentWheel->GetRightVector();
 	const FVector Velocity = Box->GetPhysicsLinearVelocityAtPoint(WorldLocation);
 
 	float Force = (UKismetMathLibrary::Dot_VectorVector(Velocity, RightVector) * -1.f) * GripFactor;
 	Force /= UGameplayStatics::GetWorldDeltaSeconds(this);
-	
+
 	const FVector VectorForce = FVector(Force) * FVector(TireMass) * RightVector;
 	Box->AddForceAtLocation(VectorForce, WorldLocation);
 
 	UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-		WorldLocation + (VectorForce * FVector(.1f)), 25.f, FColor::Red);
+	                                     WorldLocation + (VectorForce * FVector(.1f)), 25.f, FColor::Red);
 }
 
 void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance)
@@ -378,7 +391,8 @@ void ACar::BrakeActionComplete(const FInputActionValue& Value)
 void ACar::TurnActionTriggered(const FInputActionValue& Value)
 {
 	const FVector PlaneVelocity = FVector(Box->GetPhysicsLinearVelocity().X, Box->GetPhysicsLinearVelocity().Y, 0.f);
-	if (PlaneVelocity.Length() < 10.f) {
+	if (PlaneVelocity.Length() < 10.f)
+	{
 		return;
 	}
 
@@ -421,9 +435,12 @@ void ACar::JumpActionReleased(const FInputActionValue& Value)
 
 void ACar::DashActionPressed(const FInputActionValue& Value)
 {
-	bIsDashing = true;
+	if (!bFullGrounded && !bHasDashed)
+	{
+		bIsDashing = true;
+		bCanDash = true;
+	}
 }
-
 void ACar::DashActionReleased(const FInputActionValue& Value)
 {
 	bIsDashing = false;
