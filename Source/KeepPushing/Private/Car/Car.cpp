@@ -9,7 +9,9 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
 #include "Traps/DeadlyTraps/SmasherTrap.h"
-#include "VoidZone/VoidZone.h"
+#include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
+#include "KeepPushing/Public/LifeZone/LifeZone.h"
+
 
 class ASmasherTrap;
 
@@ -57,7 +59,7 @@ void ACar::BeginPlay()
 		It->OnTrapKillPlayer.AddDynamic(this, &ACar::Kill);
 	}
 
-	for (TActorIterator<AVoidZone> It(GetWorld()); It; ++It)
+	for (TActorIterator<ALifeZone> It(GetWorld()); It; ++It)
 	{
 		It->OnVoidZoneTouched.AddDynamic(this, &ACar::Kill);
 	}
