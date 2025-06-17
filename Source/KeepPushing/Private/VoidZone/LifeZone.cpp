@@ -1,9 +1,9 @@
-﻿#include "VoidZone/VoidZone.h"
+﻿#include "KeepPushing/Public/LifeZone/LifeZone.h"
 
 #include "Car/Car.h"
 #include "Components/BoxComponent.h"
 
-AVoidZone::AVoidZone()
+ALifeZone::ALifeZone()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -11,31 +11,30 @@ AVoidZone::AVoidZone()
 	SetRootComponent(_triggerZone);
 
 	_triggerZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	_triggerZone->SetCollisionObjectType(ECC_WorldDynamic);
+	_triggerZone->SetCollisionObjectType(ECC_Pawn);
 	_triggerZone->SetCollisionResponseToAllChannels(ECR_Ignore);
-	_triggerZone->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	_triggerZone->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	_triggerZone->SetBoxExtent(FVector(100.f, 100.f, 100.f));
 	
-	_triggerZone->OnComponentBeginOverlap.AddDynamic(this, &AVoidZone::OnOverlapBegin);
+	//_triggerZone->OnComponentBeginOverlap.AddDynamic(this, &ALifeZone::OnOverlapBegin);
+	_triggerZone->OnComponentEndOverlap.AddDynamic(this, &ALifeZone::OnOverlapEnd);
 }
 
-void AVoidZone::BeginPlay()
+void ALifeZone::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void AVoidZone::Tick(float DeltaTime)
+void ALifeZone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void AVoidZone::OnOverlapBegin(
-	UPrimitiveComponent* overlappedComp,
-	AActor* otherActor,
-	UPrimitiveComponent* otherComp,
-	int32 otherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& sweepResult)
+void ALifeZone::OnOverlapEnd(
+		UPrimitiveComponent* overlappedComp,
+		AActor* otherActor,
+		UPrimitiveComponent* otherComp,
+		int32 otherBodyIndex)
 {
 	if (!otherActor || otherActor == this)
 	{

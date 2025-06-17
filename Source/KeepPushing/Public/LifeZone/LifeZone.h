@@ -2,17 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "VoidZone.generated.h"
+#include "LifeZone.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnVoidZoneOverlap, AActor*, OverlappedActor);
 
 UCLASS()
-class KEEPPUSHING_API AVoidZone : public AActor
+class KEEPPUSHING_API ALifeZone : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AVoidZone();
+	ALifeZone();
 
 protected:
 	virtual void BeginPlay() override;
@@ -21,13 +21,11 @@ protected:
 	class UBoxComponent* _triggerZone;
 
 	UFUNCTION()
-	void OnOverlapBegin(
+	void OnOverlapEnd(
 		UPrimitiveComponent* overlappedComp,
 		AActor* otherActor,
 		UPrimitiveComponent* otherComp,
-		int32 otherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& sweepResult);
+		int32 otherBodyIndex);
 
 public:
 	

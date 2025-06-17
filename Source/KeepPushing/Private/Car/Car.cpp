@@ -9,7 +9,9 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
 #include "Traps/DeadlyTraps/SmasherTrap.h"
-#include "VoidZone/VoidZone.h"
+#include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
+#include "KeepPushing/Public/LifeZone/LifeZone.h"
+
 
 class ASmasherTrap;
 
@@ -57,7 +59,7 @@ void ACar::BeginPlay()
 		It->OnTrapKillPlayer.AddDynamic(this, &ACar::Kill);
 	}
 
-	for (TActorIterator<AVoidZone> It(GetWorld()); It; ++It)
+	for (TActorIterator<ALifeZone> It(GetWorld()); It; ++It)
 	{
 		It->OnVoidZoneTouched.AddDynamic(this, &ACar::Kill);
 	}
@@ -94,21 +96,18 @@ void ACar::Tick(float DeltaTime)
 	if (currentWheelOnGround > 0)
 	{
 		bFullGrounded = true;
+		bHasDashed = false;
 	}
 	else
 	{
 		bFullGrounded = false;
 	}
 
-	if (!bFullGrounded)
-	{
-		bCanDash = true;
-	}
-
-	if (!bFullGrounded && bIsDashing && bCanDash)
+	if (!bFullGrounded && bCanDash)
 	{
 		CalcDashForce();
 		bCanDash = false;
+		bHasDashed = true;
 	}
 	else if (bIsJumping && bFullGrounded)
 	{
@@ -438,9 +437,12 @@ void ACar::JumpActionReleased(const FInputActionValue& Value)
 
 void ACar::DashActionPressed(const FInputActionValue& Value)
 {
-	bIsDashing = true;
+	if (!bFullGrounded && !bHasDashed)
+	{
+		bIsDashing = true;
+		bCanDash = true;
+	}
 }
-
 void ACar::DashActionReleased(const FInputActionValue& Value)
 {
 	bIsDashing = false;
