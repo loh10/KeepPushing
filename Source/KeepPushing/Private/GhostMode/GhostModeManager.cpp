@@ -45,6 +45,15 @@ void AGhostModeManager::BeginPlay()
 	}
 }
 
+float AGhostModeManager::GetTimeForMap(const FString& MapName) const
+{
+	if (const FTrace* Trace = SaveRacePoints.Find(MapName))
+	{
+		return Trace->Time;
+	}
+	return .0f;
+}
+
 void AGhostModeManager::EndPlayTriggered()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("End Play"));
