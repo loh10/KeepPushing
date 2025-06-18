@@ -11,6 +11,7 @@
 #include "Traps/DeadlyTraps/SmasherTrap.h"
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "KeepPushing/Public/LifeZone/LifeZone.h"
+#include "Sound/SoundManager.h"
 
 
 class ASmasherTrap;
@@ -73,6 +74,8 @@ void ACar::Kill(AActor* victim)
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());
 	Box->SetWorldTransform(_startTransform);
+
+	USoundManager::Get(this)->Play2DSound("Car_Die");
 }
 
 void ACar::MultiplySpeed(float Factor)
@@ -128,6 +131,8 @@ void ACar::HandleDash()
 		CalcDashForce();
 		bCanDash = false;
 		bHasDashed = true;
+
+		USoundManager::Get(this)->Play2DSound("Car_Dash");
 	}
 }
 
@@ -391,6 +396,7 @@ void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance
 
 		Box->SetAllPhysicsLinearVelocity(FVector(Velocity.X, Velocity.Y, Velocity.Z));
 		Box->AddForceAtLocation(FVector(JumpForce) * FVector::UpVector, WorldLocation);
+		USoundManager::Get(this)->Play2DSound("Car_Jump");
 	}
 }
 

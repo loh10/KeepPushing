@@ -58,6 +58,7 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 				FString::Printf(TEXT("Finish Collided with: %s"), *otherActor->GetName())
 				);*/
 			USoundManager::Get(this)->Play2DSound("Win"); //Only for sound testing
+			USoundManager::Get(this)->StopMusic(); //Stops currently playing music
 			break;
 
 		default:
