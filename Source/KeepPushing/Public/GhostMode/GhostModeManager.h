@@ -15,7 +15,8 @@ public:
 
 	virtual void BeginPlay() override;
 
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	UFUNCTION()
+	void EndPlayTriggered();
 	
 	virtual void Tick(float DeltaTime) override;
 
@@ -30,10 +31,17 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "GhostMode")
 	void SaveTracesPoints();
+	
 private:
 	void FollowCar(const float deltaTime);
 
 	void RegisterSplinePoint(const float deltaTime);
+
+	UFUNCTION(BlueprintCallable, Category = "GhostMode")
+	void DeleteSaveByName(const FString& SaveSlotName, int32 UserIndex = 0);
+
+	UFUNCTION(BlueprintCallable, Category = "GhostMode")
+	void DeleteAllSaves();
 	
 public:
 	UPROPERTY(EditAnywhere, Category = "GhostMode")

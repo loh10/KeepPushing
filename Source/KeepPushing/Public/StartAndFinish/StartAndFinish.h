@@ -13,6 +13,7 @@ enum class EStartFinishType : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTriggerEvent, EStartFinishType, triggerType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRaceEndSimple);
 
 UCLASS()
 class KEEPPUSHING_API AStartAndFinish : public AActor
@@ -24,6 +25,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Trigger")
 	FOnTriggerEvent OnTriggerEvent;
+
+	UPROPERTY(BlueprintAssignable, Category = "Trigger")
+	FOnRaceEndSimple OnRaceEndSimple;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -31,7 +35,7 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trigger")
-	EStartFinishType _triggerType = EStartFinishType::Start;
+	EStartFinishType _triggerType = EStartFinishType::Finish;
 
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trigger")
@@ -42,7 +46,6 @@ protected:
 		meta = (ToolTip = "Time in seconds"))
 	float _countDown = 3;
 
-	
 	
 	UFUNCTION()
 	void OnTriggerEnter(
