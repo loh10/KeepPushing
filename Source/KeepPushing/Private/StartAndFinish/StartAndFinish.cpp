@@ -50,6 +50,7 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 
 		case EStartFinishType::Finish:
 			OnTriggerEvent.Broadcast(EStartFinishType::Finish);
+			OnRaceEndSimple.Broadcast();
 			/*GEngine->AddOnScreenDebugMessage(
 				-1,
 				2.0f,
