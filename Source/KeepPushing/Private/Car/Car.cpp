@@ -430,6 +430,11 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 
 	SteeringInput = Value.Get<float>();
 
+	const float ForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), PlaneVelocity);
+	if (ForwardSpeed < 0.f)
+	{
+		SteeringInput *= -1.f;
+	}
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
 		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
