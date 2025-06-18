@@ -62,6 +62,23 @@ void USoundManager::Play2DSound(FName SoundName)
 	}
 }
 
+void USoundManager::PlayMusic(FName SoundName)
+{
+	if (USoundBase** Found = SoundMap.Find(SoundName))
+	{
+		_currentMusic = UGameplayStatics::SpawnSound2D(GetWorld(), *Found);
+		_currentMusic->Activate();
+	}
+}
+
+void USoundManager::StopMusic()
+{
+	if (_currentMusic)
+	{
+		_currentMusic->Deactivate();
+	}
+}
+
 void USoundManager::PlaySoundAtLocation(FName SoundName, FVector Location)
 {
 	if (USoundBase** Found = SoundMap.Find(SoundName))

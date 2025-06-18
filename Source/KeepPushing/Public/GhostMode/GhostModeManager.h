@@ -31,6 +31,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "GhostMode")
 	void SaveTracesPoints();
+
+	UFUNCTION(BlueprintCallable, Category = "GhostMode")
+	float GetTimeForMap(const FString& MapName) const;
 	
 private:
 	void FollowCar(const float deltaTime);

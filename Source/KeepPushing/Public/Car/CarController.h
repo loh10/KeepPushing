@@ -17,8 +17,6 @@ class KEEPPUSHING_API ACarController : public APlayerController
 public:
 	virtual void BeginPlay() override;
 
-	ACarController();
-
 	void BindStartAndStopTimer();
 
 	UFUNCTION()
@@ -27,6 +25,7 @@ public:
 public:
 	UPROPERTY(EditAnywhere, Category = "CarController|UI")
 	TSubclassOf<UTimerUserWidget> TimerWidgetClass;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "CarController|UI")
 	TSubclassOf<UEndingUI> EndingUIClass;

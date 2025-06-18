@@ -1,4 +1,4 @@
-﻿#include "Car/Car.h"
+#include "Car/Car.h"
 
 #include "Car/CarController.h"
 #include "EnhancedInputSubsystems.h"
@@ -12,6 +12,7 @@
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "KeepPushing/Public/LifeZone/LifeZone.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundManager.h"
 
 
 class ASmasherTrap;
@@ -80,6 +81,8 @@ void ACar::Kill(AActor* victim)
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());
 	Box->SetWorldTransform(_startTransform);
+
+	USoundManager::Get(this)->Play2DSound("Car_Die");
 }
 
 void ACar::MultiplySpeed(float Factor)
@@ -156,6 +159,7 @@ void ACar::HandleDash()
 				EAttachLocation::KeepRelativeOffset,
 				true);
 		}
+		USoundManager::Get(this)->Play2DSound("Car_Dash");
 	}
 }
 
@@ -419,6 +423,7 @@ void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance
 
 		Box->SetAllPhysicsLinearVelocity(FVector(Velocity.X, Velocity.Y, Velocity.Z));
 		Box->AddForceAtLocation(FVector(JumpForce) * FVector::UpVector, WorldLocation);
+		USoundManager::Get(this)->Play2DSound("Car_Jump");
 	}
 }
 
@@ -452,6 +457,11 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 
 	SteeringInput = Value.Get<float>();
 
+	const float ForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), PlaneVelocity);
+	if (ForwardSpeed < 0.f)
+	{
+		SteeringInput *= -1.f;
+	}
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
 		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
