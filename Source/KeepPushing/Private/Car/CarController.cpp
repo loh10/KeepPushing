@@ -5,14 +5,6 @@
 #include "StartAndFinish/StartAndFinish.h"
 #include "Timer/TimerUserWidget.h"
 
-ACarController::ACarController()
-{
-        static ConstructorHelpers::FClassFinder<UUserWidget> WidgetClassFinder(TEXT("/Game/UI/EndUI.EndUI_C"));
-    if (WidgetClassFinder.Succeeded())
-    {
-        EndingUIClass = WidgetClassFinder.Class;
-    }
-}
 
 void ACarController::BeginPlay()
 {
