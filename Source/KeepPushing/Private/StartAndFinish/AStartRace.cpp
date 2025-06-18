@@ -21,7 +21,7 @@ void AAStartRace::BeginPlay()
 
 void AAStartRace::BeginCountdown()
 {
-	_currentCount = _countdownStart;
+	_currentCount = _countdownStart + _offsetCountdown;
 	UpdateCountdown();
 	GetWorldTimerManager().SetTimer(_countdownTimer, this, &AAStartRace::UpdateCountdown, 1.f, true);
 }

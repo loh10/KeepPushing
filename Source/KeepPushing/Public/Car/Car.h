@@ -20,6 +20,12 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaTime) override;
+	void UpdateGroundState();
+	void HandleDash();
+	void HandleJump();
+	void StabilizeCar();
+	void ApplyHighSpeedForces();
+	void ClampAngularVelocity();
 
 	virtual void PossessedBy(AController* NewController) override;
 

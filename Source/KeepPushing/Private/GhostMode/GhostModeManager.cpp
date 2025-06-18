@@ -4,6 +4,7 @@
 #include "GhostMode/GhostModeData.h"
 #include "GhostMode/GhostTraceSaver.h"
 #include "Kismet/GameplayStatics.h"
+#include "StartAndFinish/StartAndFinish.h"
 #include "Timer/Timer.h"
 
 namespace GhostModeManagerConstant
@@ -24,14 +25,29 @@ void AGhostModeManager::BeginPlay()
 {
 	Super::BeginPlay();
 	FollowedCar = UGameplayStatics::GetActorOfClass(this, ACar::StaticClass());
-	
+
+	CurrentMapName = GetWorld()->GetMapName();
+	CurrentMapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, CurrentMapName);
+
+	//DeleteAllSaves();
+	//DeleteSaveByName(CurrentMapName);
 	LoadTracesPoints();
 	InitializeGhostMode();
+
+	TArray<AActor*> foundTriggers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStartAndFinish::StaticClass(), foundTriggers);
+	for (AActor* actor : foundTriggers)
+	{
+		AStartAndFinish* trigger = Cast<AStartAndFinish>(actor);
+		trigger->OnRaceEndSimple.AddDynamic(this, &AGhostModeManager::EndPlayTriggered);
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Found Start/Finish Trigger"));
+	}
 }
 
-void AGhostModeManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+void AGhostModeManager::EndPlayTriggered()
 {
-	Super::EndPlay(EndPlayReason);
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("End Play"));
 	if (const ATimer* Timer = Cast<ATimer>(UGameplayStatics::GetActorOfClass(this, ATimer::StaticClass()))) {
 		const float CurrentTimerTime = Timer->GetElapsed();
 		if (CurrentTimerTime == 0.f)
@@ -128,6 +144,54 @@ void AGhostModeManager::RegisterSplinePoint(const float deltaTime)
 	}
 
 	_currentRegisterSplineKey += deltaTime;
+}
+
+void AGhostModeManager::DeleteSaveByName(const FString& SaveSlotName, int32 UserIndex)
+{
+	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, UserIndex))
+	{
+		if (UGameplayStatics::DeleteGameInSlot(SaveSlotName, UserIndex))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Save '%s' deleted successfully."), *SaveSlotName);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to delete save '%s'."), *SaveSlotName);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Save '%s' does not exist."), *SaveSlotName);
+	}
+}
+
+void AGhostModeManager::DeleteAllSaves()
+{
+	const FString SaveDir = FPaths::ProjectSavedDir() + TEXT("SaveGames/");
+
+	IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+
+	if (PlatformFile.DirectoryExists(*SaveDir))
+	{
+		TArray<FString> Files;
+		PlatformFile.FindFiles(Files, *SaveDir, TEXT("*.sav"));
+
+		for (const FString& File : Files)
+		{
+			if (PlatformFile.DeleteFile(*File))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Deleted save file: %s"), *File);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to delete: %s"), *File);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Save directory does not exist: %s"), *SaveDir);
+	}
 }
 
 void AGhostModeManager::LoadTracesPoints()

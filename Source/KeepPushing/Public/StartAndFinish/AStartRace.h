@@ -17,7 +17,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Race|Events")
 	FOnRaceStartSimple OnStart;
-	
 protected:
 	virtual void BeginPlay() override;
 
@@ -47,4 +46,6 @@ protected:
 	
 	UFUNCTION()
 	void TriggerCountdownHide();
+private :
+	int _offsetCountdown= 4;
 };
