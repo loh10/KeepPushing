@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SoundLibrary.h"
+#include "Components/AudioComponent.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Sound/SoundBase.h"
 #include "SoundManager.generated.h"
@@ -26,6 +27,12 @@ public:
 	void Play2DSound(FName SoundName);
 
 	UFUNCTION(BlueprintCallable)
+	void PlayMusic(FName SoundName);
+
+	UFUNCTION(BlueprintCallable)
+	void StopMusic();
+
+	UFUNCTION(BlueprintCallable)
 	void PlaySoundAtLocation(FName SoundName, FVector Location);
 
 	UFUNCTION(BlueprintPure)
@@ -45,4 +52,6 @@ private:
 	USoundLibrary* SoundLibrary;
 
 	TMap<FName, USoundBase*> SoundMap;
+
+	UAudioComponent* _currentMusic;
 };

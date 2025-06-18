@@ -1,4 +1,6 @@
 ﻿#include "Traps/DeadlyTraps/Spike/SpikeTrap.h"
+
+#include "Sound/SoundManager.h"
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 
 
@@ -36,4 +38,6 @@ void ASpikeTrap::Activate()
 	}
 
 	_timer = _activationDuration;
+
+	USoundManager::Get(this)->PlaySoundAtLocation("Spike_Activate", GetActorLocation());
 }

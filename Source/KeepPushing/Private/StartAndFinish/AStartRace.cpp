@@ -2,6 +2,7 @@
 
 
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundManager.h"
 #include "Timer/Timer.h"
 
 AAStartRace::AAStartRace()
@@ -20,7 +21,7 @@ void AAStartRace::BeginPlay()
 
 void AAStartRace::BeginCountdown()
 {
-	_currentCount = _countdownStart;
+	_currentCount = _countdownStart + _offsetCountdown;
 	UpdateCountdown();
 	GetWorldTimerManager().SetTimer(_countdownTimer, this, &AAStartRace::UpdateCountdown, 1.f, true);
 }
@@ -71,6 +72,8 @@ void AAStartRace::FinishCountdown()
 		_countdownHideDelay,   // Délai avant de cacher (1 seconde ici, ajuste si besoin)
 		false
 	);
+
+	USoundManager::Get(this)->PlayMusic("GameMusic");
 }
 
 void AAStartRace::TriggerCountdownHide()

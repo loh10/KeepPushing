@@ -11,6 +11,7 @@
 #include "Traps/DeadlyTraps/SmasherTrap.h"
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "KeepPushing/Public/LifeZone/LifeZone.h"
+#include "Sound/SoundManager.h"
 
 
 class ASmasherTrap;
@@ -73,6 +74,8 @@ void ACar::Kill(AActor* victim)
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 	Box->SetAllPhysicsAngularVelocityInDegrees(FVector::Zero());
 	Box->SetWorldTransform(_startTransform);
+
+	USoundManager::Get(this)->Play2DSound("Car_Die");
 }
 
 void ACar::MultiplySpeed(float Factor)
@@ -86,63 +89,89 @@ void ACar::MultiplySpeed(float Factor)
 
 void ACar::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-	bFullGrounded = true;
-	currentWheelOnGround = 4;
-	for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
-	{
-		HandleWheelForce(Element.Get());
-	}
-	if (currentWheelOnGround > 0)
-	{
-		bFullGrounded = true;
-		bHasDashed = false;
-	}
-	else
-	{
-		bFullGrounded = false;
-	}
+    Super::Tick(DeltaTime);
 
-	if (!bFullGrounded && bCanDash)
+    UpdateGroundState();
+    StabilizeCar();
+    ApplyHighSpeedForces();
+    ClampAngularVelocity();
+}
+
+void ACar::UpdateGroundState()
+{
+    bFullGrounded = true;
+    currentWheelOnGround = SuspensionArray.Num();
+
+    for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
+    {
+        HandleWheelForce(Element.Get());
+    }
+
+    bFullGrounded = currentWheelOnGround > 0;
+    if (bFullGrounded)
+    {
+        bHasDashed = false;
+    }
+}
+
+void ACar::HandleJump()
+{
+    if (bFullGrounded)
+    {
+        const FVector CurrentVelocity = Box->GetComponentVelocity();
+        Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1.f, 1.f, 0.f));
+        Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
+    }
+}
+
+void ACar::HandleDash()
+{
+	if (!bFullGrounded)
 	{
 		CalcDashForce();
 		bCanDash = false;
 		bHasDashed = true;
-	}
-	else if (bIsJumping && bFullGrounded)
-	{
-		const FVector CurrentVelocity = Box->GetComponentVelocity();
-		Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1., 1., 0.));
-		Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
-	}
 
-	FVector UpVector = Box->GetUpVector();
-	float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
-	if (RollAngle > KINDA_SMALL_NUMBER)
-	{
-		FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
-		Box->AddTorqueInRadians(StabilizingTorque);
+		USoundManager::Get(this)->Play2DSound("Car_Dash");
 	}
+}
 
-	float Speed = Box->GetPhysicsLinearVelocity().Size();
-	if (Speed > HighSpeedThreshold)
-	{
-		FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->
-			GetRightVector();
-		FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
-		Box->AddForce(CounterForce);
-	}
+void ACar::StabilizeCar()
+{
+    const FVector UpVector = Box->GetUpVector();
+    const float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
 
-	if (Speed > 0.f)
-	{
-		FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
-		Box->AddForce(Downforce);
-	}
+    if (RollAngle > KINDA_SMALL_NUMBER)
+    {
+        const FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
+        Box->AddTorqueInRadians(StabilizingTorque);
+    }
+}
 
-	FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
-	AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
-	AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
-	Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
+void ACar::ApplyHighSpeedForces()
+{
+    const float Speed = Box->GetPhysicsLinearVelocity().Size();
+
+    if (Speed > HighSpeedThreshold)
+    {
+        const FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->GetRightVector();
+        const FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
+        Box->AddForce(CounterForce);
+    }
+
+    if (Speed > 0.f)
+    {
+        const FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
+        Box->AddForce(Downforce);
+    }
+}
+
+void ACar::ClampAngularVelocity()
+{
+    FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
+    AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
+    AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
+    Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
 }
 
 void ACar::CalcDashForce()
@@ -367,6 +396,7 @@ void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance
 
 		Box->SetAllPhysicsLinearVelocity(FVector(Velocity.X, Velocity.Y, Velocity.Z));
 		Box->AddForceAtLocation(FVector(JumpForce) * FVector::UpVector, WorldLocation);
+		USoundManager::Get(this)->Play2DSound("Car_Jump");
 	}
 }
 
@@ -400,6 +430,11 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 
 	SteeringInput = Value.Get<float>();
 
+	const float ForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), PlaneVelocity);
+	if (ForwardSpeed < 0.f)
+	{
+		SteeringInput *= -1.f;
+	}
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
 		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
@@ -427,7 +462,7 @@ void ACar::FlipActionPressed(const FInputActionValue& Value)
 
 void ACar::JumpActionPressed(const FInputActionValue& Value)
 {
-	bIsJumping = true;
+	HandleJump();
 }
 
 void ACar::JumpActionReleased(const FInputActionValue& Value)
@@ -440,9 +475,10 @@ void ACar::DashActionPressed(const FInputActionValue& Value)
 	if (!bFullGrounded && !bHasDashed)
 	{
 		bIsDashing = true;
-		bCanDash = true;
+		HandleDash();
 	}
 }
+
 void ACar::DashActionReleased(const FInputActionValue& Value)
 {
 	bIsDashing = false;
