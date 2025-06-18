@@ -11,6 +11,7 @@
 #include "Traps/DeadlyTraps/SmasherTrap.h"
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "KeepPushing/Public/LifeZone/LifeZone.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 class ASmasherTrap;
@@ -47,6 +48,12 @@ ACar::ACar()
 	SuspensionArray.Add(FR_Wheel);
 	SuspensionArray.Add(BL_Wheel);
 	SuspensionArray.Add(BR_Wheel);
+
+	DashParticlePos1 = CreateDefaultSubobject<UParticleSystemComponent>("DashParticlePos1");
+	DashParticlePos1->SetupAttachment(Box);
+
+	DashParticlePos2 = CreateDefaultSubobject<UParticleSystemComponent>("DashParticlePos2");
+	DashParticlePos2->SetupAttachment(Box);
 }
 
 void ACar::BeginPlay()
@@ -128,6 +135,27 @@ void ACar::HandleDash()
 		CalcDashForce();
 		bCanDash = false;
 		bHasDashed = true;
+
+		if (DashParticles)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				DashParticles,
+				DashParticlePos1,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true);
+
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				DashParticles,
+				DashParticlePos2,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true);
+		}
 	}
 }
 

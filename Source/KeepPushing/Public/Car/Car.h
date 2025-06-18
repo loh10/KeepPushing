@@ -5,6 +5,8 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Car.generated.h"
 
 class UCameraComponent;
@@ -208,6 +210,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Static mesh representing the car's chassis."))
 	TObjectPtr<UStaticMeshComponent> Chassie;
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<USceneComponent> DashParticlePos1;
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<USceneComponent> DashParticlePos2;
+	
+	UPROPERTY(EditAnywhere, Category = "VFX", meta = (ToolTip = "Particle emitter for the dash"))
+	TObjectPtr<UNiagaraSystem> DashParticles;
 
 	UPROPERTY(EditAnywhere, meta = (ToolTip = "Force applied when the car jumps."))
 	float JumpForce = 2200000.f;
