@@ -60,7 +60,8 @@ ACar::ACar()
 void ACar::BeginPlay()
 {
 	Super::BeginPlay();
-	Box->SetCenterOfMass(FVector(0.f, 0.f, -50.f));
+	Box->SetCenterOfMass(FVector(0.f, 0.f, -120.f));
+
 	_startTransform = Box->GetComponentTransform();
 	for (TActorIterator<ASmasherTrap> It(GetWorld()); It; ++It)
 	{
@@ -90,6 +91,7 @@ void ACar::Tick(float DeltaTime)
 
     UpdateGroundState();
     StabilizeCar();
+	PreventRolling();
     ApplyHighSpeedForces();
     ClampAngularVelocity();
 }
@@ -220,16 +222,48 @@ void ACar::HandleDash()
 // Stabilizes the car by applying torque to correct its roll angle.
 void ACar::StabilizeCar()
 {
-    const FVector UpVector = Box->GetUpVector();
-    const float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
+	const FVector UpVector = Box->GetUpVector();
+	const float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
 
-    if (RollAngle > KINDA_SMALL_NUMBER)
-    {
-        const FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
-        Box->AddTorqueInRadians(StabilizingTorque);
-    }
+	if (RollAngle > KINDA_SMALL_NUMBER)
+	{
+		// Stronger anti-roll force
+		const FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce * 3.0f;
+		Box->AddTorqueInRadians(StabilizingTorque);
+	}
+
+	// Additional: Actively counter roll and pitch
+	FVector AngularVel = Box->GetPhysicsAngularVelocityInRadians();
+
+	// Heavily dampen roll (X-axis) and pitch (Y-axis) rotation
+	FVector CounterTorque = FVector::ZeroVector;
+	CounterTorque.X = -AngularVel.X * 500000.0f; // Anti-roll
+	CounterTorque.Y = -AngularVel.Y * 300000.0f; // Anti-pitch
+
+	Box->AddTorqueInRadians(CounterTorque);
 }
 
+
+void ACar::PreventRolling()
+{
+	FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
+
+	// Clamp roll and pitch angular velocity
+	AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -1.0f, 1.0f); // Roll
+	AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -1.0f, 1.0f); // Pitch
+
+	Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
+
+	// Keep car upright
+	FVector UpVector = Box->GetUpVector();
+	FVector WorldUp = FVector::UpVector;
+
+	if (FVector::DotProduct(UpVector, WorldUp) < 0.7f) // Car is tilting too much
+	{
+		FVector CorrectiveTorque = FVector::CrossProduct(UpVector, WorldUp) * 2000000.0f;
+		Box->AddTorqueInRadians(CorrectiveTorque);
+	}
+}
 // Applies forces to stabilize the car at high speeds.
 void ACar::ApplyHighSpeedForces()
 {
@@ -489,26 +523,28 @@ void ACar::BrakeActionComplete(const FInputActionValue& Value)
 
 void ACar::TurnActionTriggered(const FInputActionValue& Value)
 {
-	const FVector PlaneVelocity = FVector(Box->GetPhysicsLinearVelocity().X, Box->GetPhysicsLinearVelocity().Y, 0.f);
-	if (PlaneVelocity.Length() < 10.f)
-	{
-		return;
-	}
-
 	SteeringInput = Value.Get<float>();
 
-	// Inverser la direction si l'input d'accélération est négatif (marche arrière)
-	if (AccelerationInput < 0.f)
-	{
-		SteeringInput = -SteeringInput;
-	}
+	if (FMath::IsNearlyZero(SteeringInput))
+		return;
 
-	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
-		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
-	{
-		Box->AddTorqueInRadians(FVector(0., 0., SteeringInput * TurnTorque));
-	}
+	// Obtenir la vitesse actuelle
+	const float Speed = Box->GetComponentVelocity().Size();
+
+	// Ne pas tourner à basse vitesse (empêche de sur-virer à l'arrêt)
+	if (Speed < 50.f)
+		return;
+
+
+
+	const float DeltaYaw = SteeringInput * TurnTorque * UGameplayStatics::GetWorldDeltaSeconds(this);
+
+	FRotator NewRotation = Box->GetComponentRotation();
+	NewRotation.Yaw += DeltaYaw;
+
+	Box->SetWorldRotation(NewRotation, false, nullptr, ETeleportType::TeleportPhysics);
 }
+
 
 void ACar::DriftActionPressed(const FInputActionValue& Value)
 {
