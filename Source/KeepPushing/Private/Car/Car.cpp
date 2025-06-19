@@ -94,6 +94,16 @@ void ACar::Tick(float DeltaTime)
 	PreventRolling();
     ApplyHighSpeedForces();
     ClampAngularVelocity();
+
+	FVector CurrentVelocity = Box->GetPhysicsLinearVelocity();
+	float CurrentSpeed = CurrentVelocity.Size();
+
+	if (CurrentSpeed > TopSpeed)
+	{
+		FVector ClampedVelocity = CurrentVelocity.GetSafeNormal() * TopSpeed;
+		Box->SetPhysicsLinearVelocity(ClampedVelocity);
+	}
+
 }
 
 // Sets up the car's input bindings.
@@ -175,15 +185,27 @@ void ACar::UpdateGroundState()
     }
 }
 
-// Handles the car's jump by applying an upward force.
+
 void ACar::HandleJump()
 {
-    if (bFullGrounded)
-    {
-        const FVector CurrentVelocity = Box->GetComponentVelocity();
-        Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1.f, 1.f, 0.f));
-        Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
-    }
+	if (bFullGrounded)
+	{
+		FVector Velocity = Box->GetPhysicsLinearVelocity();
+		Velocity.Z = 0.f;
+		Box->SetPhysicsLinearVelocity(Velocity);
+
+		const float DesiredJumpHeight = 200.f; // 2 mètres
+
+		float Gravity = FMath::Abs(GetWorld()->GetGravityZ());
+
+		float JumpSpeed = FMath::Sqrt(2.f * Gravity * DesiredJumpHeight);
+
+		FVector JumpImpulse = FVector(0.f, 0.f, JumpSpeed);
+		Box->AddImpulse(JumpImpulse, NAME_None, true);
+
+		// Jouer le son de saut
+		USoundManager::Get(this)->Play2DSound("Car_Jump");
+	}
 }
 
 // Handles the car's dash by applying a forward force and playing effects.
@@ -295,15 +317,23 @@ void ACar::ClampAngularVelocity()
 // Calculates and applies the dash force based on the car's current speed.
 void ACar::CalcDashForce()
 {
-	float CurrentVelLength = Box->GetComponentVelocity().Length();
-	float VelDashRatio = FMath::Clamp(CurrentVelLength / (TopSpeed / 2), 0, 1);
-	float DashCurveForce = DashCurve->GetFloatValue(VelDashRatio);
-	UE_LOG(LogTemp, Warning, TEXT("Dash Vel length : %f"), CurrentVelLength);
-	UE_LOG(LogTemp, Warning, TEXT("Dash Vel Ratio : %f"), VelDashRatio);
-	UE_LOG(LogTemp, Warning, TEXT("Ensuing Dash Force : %f"), DashCurveForce);
+	// Obtenez la vitesse actuelle de la voiture
+	const FVector CurrentVelocity = Box->GetPhysicsLinearVelocity();
+	const FVector ForwardVector = Box->GetForwardVector();
+
+	// Calculez la vitesse avant (projection de la vitesse sur le vecteur avant)
+	const float ForwardSpeed = FVector::DotProduct(CurrentVelocity, ForwardVector);
+
+	// Calculez la vitesse de dash en multipliant la vitesse avant par DashMultiplier
+	float DashSpeed = FMath::Max(ForwardSpeed, 0.f) * DashMultiplier;
+
+	// Réinitialisez la vitesse actuelle pour éviter les composantes latérales
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
-	const FVector ForceVector = Box->GetForwardVector();
-	Box->AddForce(ForceVector * FVector(DashCurveForce, DashCurveForce, DashForce.Z), EName::None, true);
+
+
+	// Appliquez la force de dash strictement dans la direction avant
+	const FVector DashForceVector = ForwardVector * DashSpeed;
+	Box->AddForce(DashForceVector, NAME_None, true);
 }
 
 // Called when the car is possessed by a controller.
@@ -374,8 +404,6 @@ void ACar::CalculateSuspension(const USceneComponent* CurrentWheel, const float 
 	Force = UKismetMathLibrary::Multiply_VectorVector(Force, FVector(UGameplayStatics::GetWorldDeltaSeconds(this)));
 	Box->AddForceAtLocation(Force, WorldLocation);
 
-	// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-	//                                      Force * FVector(0.005f) + WorldLocation, 0.f, FColor::Green);
 }
 
 // Calculates and applies acceleration force for a wheel.
@@ -401,10 +429,6 @@ void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 						                                                  TopSpeed, 0., 1.))));
 
 			Box->AddForceAtLocation(Force, WorldLocation);
-			// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-			//                                      WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
-			// 	                                     Force, FVector(0.01)),
-			//                                      25.f, FColor::Blue);
 		}
 	}
 	else
@@ -414,9 +438,6 @@ void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 			const FVector Force = FVector(AccelerationForce) * (CurrentWheel->GetForwardVector() * FVector(-1.f));
 			Box->AddForceAtLocation(Force, WorldLocation);
 
-			// UKismetSystemLibrary::DrawDebugArrow(this,
-			//                                      WorldLocation, WorldLocation + (Force * FVector(.01)),
-			//                                      25.f, FColor::Blue);
 		}
 	}
 }
@@ -444,10 +465,6 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 			Force *= -1.f;
 
 			Box->AddForceAtLocation(Force, WorldLocation);
-			// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-			//                                      WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
-			// 	                                     Force, FVector(0.01)),
-			//                                      25.f, FColor::Blue);
 		}
 	}
 	else
@@ -459,9 +476,6 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 			const FVector Force = FVector(OppositeBreakForce) * Forward;
 			Box->AddForceAtLocation(Force, WorldLocation);
 
-			// UKismetSystemLibrary::DrawDebugArrow(this,
-			//                                      WorldLocation, WorldLocation + (Force * FVector(.01)),
-			//                                      25.f, FColor::Blue);
 		}
 	}
 }
@@ -480,21 +494,21 @@ void ACar::CalculateLateralSlipping(const USceneComponent* CurrentWheel)
 
 	const FVector VectorForce = FVector(Force) * FVector(TireMass) * RightVector;
 	Box->AddForceAtLocation(VectorForce, WorldLocation);
-	//
-	// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-	//                                      WorldLocation + (VectorForce * FVector(.1f)), 25.f, FColor::Red);
+
 }
 
 // Handles the car's jump force for a specific wheel.
 void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance)
 {
-	if (bIsJumping && (SuspensionRestDistance - OutDistance) > 1.f)
+	if (bIsJumping)
 	{
 		const FVector WorldLocation = CurrentWheel->GetComponentLocation();
-		const FVector Velocity = Box->GetComponentVelocity();
+		FVector Velocity = Box->GetPhysicsLinearVelocity();
 
-		Box->SetAllPhysicsLinearVelocity(FVector(Velocity.X, Velocity.Y, Velocity.Z));
-		Box->AddForceAtLocation(FVector(JumpForce) * FVector::UpVector, WorldLocation);
+		// Set a constant upward velocity for a consistent jump
+		Velocity.Z = JumpForce / Box->GetMass(); // Adjust based on mass for consistency
+		Box->SetPhysicsLinearVelocity(Velocity);
+
 		USoundManager::Get(this)->Play2DSound("Car_Jump");
 	}
 }
@@ -528,10 +542,8 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 	if (FMath::IsNearlyZero(SteeringInput))
 		return;
 
-	// Obtenir la vitesse actuelle
 	const float Speed = Box->GetComponentVelocity().Size();
 
-	// Ne pas tourner à basse vitesse (empêche de sur-virer à l'arrêt)
 	if (Speed < 50.f)
 		return;
 
