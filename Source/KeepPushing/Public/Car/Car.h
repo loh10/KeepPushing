@@ -37,7 +37,10 @@ public:
 	void Kill(AActor* victim);
 
 	UFUNCTION(BlueprintCallable, Category = "Car|Runtime")
+
 	void MultiplySpeed(float Factor);
+	UFUNCTION(BlueprintCallable, Category = "Car|Input")
+	void DisableCarInput();
 
 private:
 	void HandleWheelForce(const USceneComponent* CurrentWheel);

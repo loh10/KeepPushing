@@ -94,6 +94,27 @@ void ACar::MultiplySpeed(float Factor)
 	Box->SetPhysicsLinearVelocity(Velocity * Factor);
 }
 
+void ACar::DisableCarInput()
+{
+	// 1. Supprime les bindings d'input
+	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	{
+		DisableInput(PC);
+	}
+
+	AccelerationInput = 0.f;
+	BrakeInput = 0.f;
+	SteeringInput = 0.f;
+	bIsDrifting = false;
+	bIsJumping = false;
+	bIsDashing = false;
+	bCanDash = false;
+
+	Box->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	Box->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+	UE_LOG(LogTemp, Warning, TEXT("Car input and forces disabled."));
+}
 void ACar::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
