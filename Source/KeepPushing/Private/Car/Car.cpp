@@ -1,4 +1,4 @@
-﻿#include "Car/Car.h"
+#include "Car/Car.h"
 
 #include "Car/CarController.h"
 #include "EnhancedInputSubsystems.h"
@@ -9,13 +9,14 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "EngineUtils.h"
 #include "Traps/DeadlyTraps/SmasherTrap.h"
-#include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "KeepPushing/Public/LifeZone/LifeZone.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundManager.h"
 
 
-class ASmasherTrap;
+class ACar;
 
+#pragma region Unreal Function
 ACar::ACar()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -48,12 +49,19 @@ ACar::ACar()
 	SuspensionArray.Add(FR_Wheel);
 	SuspensionArray.Add(BL_Wheel);
 	SuspensionArray.Add(BR_Wheel);
+
+	DashParticlePos1 = CreateDefaultSubobject<UParticleSystemComponent>("DashParticlePos1");
+	DashParticlePos1->SetupAttachment(Box);
+
+	DashParticlePos2 = CreateDefaultSubobject<UParticleSystemComponent>("DashParticlePos2");
+	DashParticlePos2->SetupAttachment(Box);
 }
 
 void ACar::BeginPlay()
 {
 	Super::BeginPlay();
-	Box->SetCenterOfMass(FVector(0.f, 0.f, -50.f));
+	Box->SetCenterOfMass(FVector(0.f, 0.f, -120.f));
+
 	_startTransform = Box->GetComponentTransform();
 	for (TActorIterator<ASmasherTrap> It(GetWorld()); It; ++It)
 	{
@@ -66,7 +74,6 @@ void ACar::BeginPlay()
 	}
 }
 
-
 void ACar::Kill(AActor* victim)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "You died");
@@ -78,130 +85,18 @@ void ACar::Kill(AActor* victim)
 	USoundManager::Get(this)->Play2DSound("Car_Die");
 }
 
-void ACar::MultiplySpeed(float Factor)
-{
-	if (!Box->IsSimulatingPhysics())
-		return;
-
-	FVector Velocity = Box->GetPhysicsLinearVelocity();
-	Box->SetPhysicsLinearVelocity(Velocity * Factor);
-}
-
 void ACar::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
     UpdateGroundState();
     StabilizeCar();
+	PreventRolling();
     ApplyHighSpeedForces();
     ClampAngularVelocity();
 }
 
-void ACar::UpdateGroundState()
-{
-    bFullGrounded = true;
-    currentWheelOnGround = SuspensionArray.Num();
-
-    for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
-    {
-        HandleWheelForce(Element.Get());
-    }
-
-    bFullGrounded = currentWheelOnGround > 0;
-    if (bFullGrounded)
-    {
-        bHasDashed = false;
-    }
-}
-
-void ACar::HandleJump()
-{
-    if (bFullGrounded)
-    {
-        const FVector CurrentVelocity = Box->GetComponentVelocity();
-        Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1.f, 1.f, 0.f));
-        Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
-    }
-}
-
-void ACar::HandleDash()
-{
-	if (!bFullGrounded)
-	{
-		CalcDashForce();
-		bCanDash = false;
-		bHasDashed = true;
-
-		USoundManager::Get(this)->Play2DSound("Car_Dash");
-	}
-}
-
-void ACar::StabilizeCar()
-{
-    const FVector UpVector = Box->GetUpVector();
-    const float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
-
-    if (RollAngle > KINDA_SMALL_NUMBER)
-    {
-        const FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce;
-        Box->AddTorqueInRadians(StabilizingTorque);
-    }
-}
-
-void ACar::ApplyHighSpeedForces()
-{
-    const float Speed = Box->GetPhysicsLinearVelocity().Size();
-
-    if (Speed > HighSpeedThreshold)
-    {
-        const FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->GetRightVector();
-        const FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
-        Box->AddForce(CounterForce);
-    }
-
-    if (Speed > 0.f)
-    {
-        const FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
-        Box->AddForce(Downforce);
-    }
-}
-
-void ACar::ClampAngularVelocity()
-{
-    FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
-    AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
-    AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
-    Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
-}
-
-void ACar::CalcDashForce()
-{
-	float CurrentVelLength = Box->GetComponentVelocity().Length();
-	float VelDashRatio = FMath::Clamp(CurrentVelLength / (TopSpeed / 2), 0, 1);
-	float DashCurveForce = DashCurve->GetFloatValue(VelDashRatio);
-	UE_LOG(LogTemp, Warning, TEXT("Dash Vel length : %f"), CurrentVelLength);
-	UE_LOG(LogTemp, Warning, TEXT("Dash Vel Ratio : %f"), VelDashRatio);
-	UE_LOG(LogTemp, Warning, TEXT("Ensuing Dash Force : %f"), DashCurveForce);
-	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
-	const FVector ForceVector = Box->GetForwardVector();
-	Box->AddForce(ForceVector * FVector(DashCurveForce, DashCurveForce, DashForce.Z), EName::None, true);
-}
-
-
-void ACar::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	if (ACarController* PC = Cast<ACarController>(NewController))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(MappingContext, 0);
-		}
-	}
-}
-
+// Sets up the car's input bindings.
 void ACar::SetupPlayerInputComponent(UInputComponent* Input)
 {
 	Super::SetupPlayerInputComponent(Input);
@@ -228,6 +123,205 @@ void ACar::SetupPlayerInputComponent(UInputComponent* Input)
 	}
 }
 
+#pragma endregion
+
+// Multiplies the car's speed by a given factor.
+void ACar::MultiplySpeed(float Factor)
+{
+	if (!Box->IsSimulatingPhysics())
+		return;
+
+	FVector Velocity = Box->GetPhysicsLinearVelocity();
+	Box->SetPhysicsLinearVelocity(Velocity * Factor);
+}
+
+// Disables all input and forces applied to the car.
+void ACar::DisableCarInput()
+{
+	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	{
+		DisableInput(PC);
+	}
+
+	AccelerationInput = 0.f;
+	BrakeInput = 0.f;
+	SteeringInput = 0.f;
+	bIsDrifting = false;
+	bIsJumping = false;
+	bIsDashing = false;
+	bCanDash = false;
+
+	Box->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	Box->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+	UE_LOG(LogTemp, Warning, TEXT("Car input and forces disabled."));
+}
+
+// Updates the car's ground state by checking if wheels are on the ground.
+void ACar::UpdateGroundState()
+{
+    bFullGrounded = true;
+    currentWheelOnGround = SuspensionArray.Num();
+
+    for (const TWeakObjectPtr<USceneComponent>& Element : SuspensionArray)
+    {
+        HandleWheelForce(Element.Get());
+    }
+
+    bFullGrounded = currentWheelOnGround > 0;
+    if (bFullGrounded)
+    {
+        bHasDashed = false;
+    }
+}
+
+// Handles the car's jump by applying an upward force.
+void ACar::HandleJump()
+{
+    if (bFullGrounded)
+    {
+        const FVector CurrentVelocity = Box->GetComponentVelocity();
+        Box->SetAllPhysicsLinearVelocity(CurrentVelocity * FVector(1.f, 1.f, 0.f));
+        Box->AddForceAtLocation(FVector::UpVector * JumpForce, Box->GetComponentLocation());
+    }
+}
+
+// Handles the car's dash by applying a forward force and playing effects.
+void ACar::HandleDash()
+{
+	if (!bFullGrounded)
+	{
+		CalcDashForce();
+		bCanDash = false;
+		bHasDashed = true;
+
+		if (DashParticles)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				DashParticles,
+				DashParticlePos1,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true);
+
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				DashParticles,
+				DashParticlePos2,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true);
+		}
+		USoundManager::Get(this)->Play2DSound("Car_Dash");
+	}
+}
+
+// Stabilizes the car by applying torque to correct its roll angle.
+void ACar::StabilizeCar()
+{
+	const FVector UpVector = Box->GetUpVector();
+	const float RollAngle = FMath::Acos(FVector::DotProduct(UpVector, FVector::UpVector));
+
+	if (RollAngle > KINDA_SMALL_NUMBER)
+	{
+		// Stronger anti-roll force
+		const FVector StabilizingTorque = FVector::CrossProduct(UpVector, FVector::UpVector) * RollAngle * StabilizationForce * 3.0f;
+		Box->AddTorqueInRadians(StabilizingTorque);
+	}
+
+	// Additional: Actively counter roll and pitch
+	FVector AngularVel = Box->GetPhysicsAngularVelocityInRadians();
+
+	// Heavily dampen roll (X-axis) and pitch (Y-axis) rotation
+	FVector CounterTorque = FVector::ZeroVector;
+	CounterTorque.X = -AngularVel.X * 500000.0f; // Anti-roll
+	CounterTorque.Y = -AngularVel.Y * 300000.0f; // Anti-pitch
+
+	Box->AddTorqueInRadians(CounterTorque);
+}
+
+
+void ACar::PreventRolling()
+{
+	FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
+
+	// Clamp roll and pitch angular velocity
+	AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -1.0f, 1.0f); // Roll
+	AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -1.0f, 1.0f); // Pitch
+
+	Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
+
+	// Keep car upright
+	FVector UpVector = Box->GetUpVector();
+	FVector WorldUp = FVector::UpVector;
+
+	if (FVector::DotProduct(UpVector, WorldUp) < 0.7f) // Car is tilting too much
+	{
+		FVector CorrectiveTorque = FVector::CrossProduct(UpVector, WorldUp) * 2000000.0f;
+		Box->AddTorqueInRadians(CorrectiveTorque);
+	}
+}
+// Applies forces to stabilize the car at high speeds.
+void ACar::ApplyHighSpeedForces()
+{
+    const float Speed = Box->GetPhysicsLinearVelocity().Size();
+
+    if (Speed > HighSpeedThreshold)
+    {
+        const FVector LateralVelocity = FVector::DotProduct(Box->GetPhysicsLinearVelocity(), Box->GetRightVector()) * Box->GetRightVector();
+        const FVector CounterForce = -LateralVelocity * SpeedStabilizationFactor;
+        Box->AddForce(CounterForce);
+    }
+
+    if (Speed > 0.f)
+    {
+        const FVector Downforce = FVector::DownVector * Speed * DownforceFactor;
+        Box->AddForce(Downforce);
+    }
+}
+
+// Clamps the car's angular velocity to prevent excessive spinning.
+void ACar::ClampAngularVelocity()
+{
+    FVector AngularVelocity = Box->GetPhysicsAngularVelocityInRadians();
+    AngularVelocity.X = FMath::Clamp(AngularVelocity.X, -MaxAngularVelocity, MaxAngularVelocity);
+    AngularVelocity.Y = FMath::Clamp(AngularVelocity.Y, -MaxAngularVelocity, MaxAngularVelocity);
+    Box->SetPhysicsAngularVelocityInRadians(AngularVelocity);
+}
+
+// Calculates and applies the dash force based on the car's current speed.
+void ACar::CalcDashForce()
+{
+	float CurrentVelLength = Box->GetComponentVelocity().Length();
+	float VelDashRatio = FMath::Clamp(CurrentVelLength / (TopSpeed / 2), 0, 1);
+	float DashCurveForce = DashCurve->GetFloatValue(VelDashRatio);
+	UE_LOG(LogTemp, Warning, TEXT("Dash Vel length : %f"), CurrentVelLength);
+	UE_LOG(LogTemp, Warning, TEXT("Dash Vel Ratio : %f"), VelDashRatio);
+	UE_LOG(LogTemp, Warning, TEXT("Ensuing Dash Force : %f"), DashCurveForce);
+	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
+	const FVector ForceVector = Box->GetForwardVector();
+	Box->AddForce(ForceVector * FVector(DashCurveForce, DashCurveForce, DashForce.Z), EName::None, true);
+}
+
+// Called when the car is possessed by a controller.
+void ACar::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (ACarController* PC = Cast<ACarController>(NewController))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(MappingContext, 0);
+		}
+	}
+}
+
+// Handles the suspension force for a specific wheel.
 void ACar::HandleWheelForce(const USceneComponent* CurrentWheel)
 {
 	const FVector Start = CurrentWheel->K2_GetComponentLocation();
@@ -241,7 +335,7 @@ void ACar::HandleWheelForce(const USceneComponent* CurrentWheel)
 
 	FHitResult HitResult;
 	if (UKismetSystemLibrary::LineTraceSingle(this, Start, End, TraceTypeQuery1,
-	                                          false, {}, EDrawDebugTrace::ForOneFrame, HitResult, true))
+	                                          false, {}, EDrawDebugTrace::None, HitResult, true))
 	{
 		if (HitResult.bBlockingHit)
 		{
@@ -263,6 +357,7 @@ void ACar::HandleWheelForce(const USceneComponent* CurrentWheel)
 	}
 }
 
+// Calculates and applies the suspension force for a wheel.
 void ACar::CalculateSuspension(const USceneComponent* CurrentWheel, const float OutDistance)
 {
 	const FVector WorldLocation = CurrentWheel->K2_GetComponentLocation();
@@ -279,10 +374,11 @@ void ACar::CalculateSuspension(const USceneComponent* CurrentWheel, const float 
 	Force = UKismetMathLibrary::Multiply_VectorVector(Force, FVector(UGameplayStatics::GetWorldDeltaSeconds(this)));
 	Box->AddForceAtLocation(Force, WorldLocation);
 
-	UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-	                                     Force * FVector(0.005f) + WorldLocation, 0.f, FColor::Green);
+	// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
+	//                                      Force * FVector(0.005f) + WorldLocation, 0.f, FColor::Green);
 }
 
+// Calculates and applies acceleration force for a wheel.
 void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 {
 	const FVector Velocity = Box->GetPhysicsLinearVelocity();
@@ -305,10 +401,10 @@ void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 						                                                  TopSpeed, 0., 1.))));
 
 			Box->AddForceAtLocation(Force, WorldLocation);
-			UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-			                                     WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
-				                                     Force, FVector(0.01)),
-			                                     25.f, FColor::Blue);
+			// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
+			//                                      WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
+			// 	                                     Force, FVector(0.01)),
+			//                                      25.f, FColor::Blue);
 		}
 	}
 	else
@@ -318,13 +414,14 @@ void ACar::CalcAcceleration(const USceneComponent* CurrentWheel)
 			const FVector Force = FVector(AccelerationForce) * (CurrentWheel->GetForwardVector() * FVector(-1.f));
 			Box->AddForceAtLocation(Force, WorldLocation);
 
-			UKismetSystemLibrary::DrawDebugArrow(this,
-			                                     WorldLocation, WorldLocation + (Force * FVector(.01)),
-			                                     25.f, FColor::Blue);
+			// UKismetSystemLibrary::DrawDebugArrow(this,
+			//                                      WorldLocation, WorldLocation + (Force * FVector(.01)),
+			//                                      25.f, FColor::Blue);
 		}
 	}
 }
 
+// Calculates and applies braking force for a wheel.
 void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 {
 	const FVector Forward = CurrentWheel->GetForwardVector();
@@ -347,10 +444,10 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 			Force *= -1.f;
 
 			Box->AddForceAtLocation(Force, WorldLocation);
-			UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-			                                     WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
-				                                     Force, FVector(0.01)),
-			                                     25.f, FColor::Blue);
+			// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
+			//                                      WorldLocation + UKismetMathLibrary::Multiply_VectorVector(
+			// 	                                     Force, FVector(0.01)),
+			//                                      25.f, FColor::Blue);
 		}
 	}
 	else
@@ -362,13 +459,14 @@ void ACar::CalcBrake(const USceneComponent* CurrentWheel)
 			const FVector Force = FVector(OppositeBreakForce) * Forward;
 			Box->AddForceAtLocation(Force, WorldLocation);
 
-			UKismetSystemLibrary::DrawDebugArrow(this,
-			                                     WorldLocation, WorldLocation + (Force * FVector(.01)),
-			                                     25.f, FColor::Blue);
+			// UKismetSystemLibrary::DrawDebugArrow(this,
+			//                                      WorldLocation, WorldLocation + (Force * FVector(.01)),
+			//                                      25.f, FColor::Blue);
 		}
 	}
 }
 
+// Calculates and applies lateral slipping force for a wheel.
 void ACar::CalculateLateralSlipping(const USceneComponent* CurrentWheel)
 {
 	GripFactor = bIsDrifting ? 0.1f : 0.5f;
@@ -382,11 +480,12 @@ void ACar::CalculateLateralSlipping(const USceneComponent* CurrentWheel)
 
 	const FVector VectorForce = FVector(Force) * FVector(TireMass) * RightVector;
 	Box->AddForceAtLocation(VectorForce, WorldLocation);
-
-	UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
-	                                     WorldLocation + (VectorForce * FVector(.1f)), 25.f, FColor::Red);
+	//
+	// UKismetSystemLibrary::DrawDebugArrow(this, WorldLocation,
+	//                                      WorldLocation + (VectorForce * FVector(.1f)), 25.f, FColor::Red);
 }
 
+// Handles the car's jump force for a specific wheel.
 void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance)
 {
 	if (bIsJumping && (SuspensionRestDistance - OutDistance) > 1.f)
@@ -399,6 +498,8 @@ void ACar::CalcJump(const USceneComponent* CurrentWheel, const float OutDistance
 		USoundManager::Get(this)->Play2DSound("Car_Jump");
 	}
 }
+
+#pragma region Input
 
 void ACar::ThrottleActionTriggered(const FInputActionValue& Value)
 {
@@ -422,26 +523,28 @@ void ACar::BrakeActionComplete(const FInputActionValue& Value)
 
 void ACar::TurnActionTriggered(const FInputActionValue& Value)
 {
-	const FVector PlaneVelocity = FVector(Box->GetPhysicsLinearVelocity().X, Box->GetPhysicsLinearVelocity().Y, 0.f);
-	if (PlaneVelocity.Length() < 10.f)
-	{
-		return;
-	}
-
 	SteeringInput = Value.Get<float>();
 
-	const float ForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), PlaneVelocity);
-	if (ForwardSpeed < 0.f)
-	{
-		SteeringInput *= -1.f;
-	}
+	if (FMath::IsNearlyZero(SteeringInput))
+		return;
 
-	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
-		UKismetMathLibrary::InRange_FloatFloat(AccelerationInput, 0., 1.))
-	{
-		Box->AddTorqueInRadians(FVector(0., 0., SteeringInput * TurnTorque));
-	}
+	// Obtenir la vitesse actuelle
+	const float Speed = Box->GetComponentVelocity().Size();
+
+	// Ne pas tourner à basse vitesse (empêche de sur-virer à l'arrêt)
+	if (Speed < 50.f)
+		return;
+
+
+
+	const float DeltaYaw = SteeringInput * TurnTorque * UGameplayStatics::GetWorldDeltaSeconds(this);
+
+	FRotator NewRotation = Box->GetComponentRotation();
+	NewRotation.Yaw += DeltaYaw;
+
+	Box->SetWorldRotation(NewRotation, false, nullptr, ETeleportType::TeleportPhysics);
 }
+
 
 void ACar::DriftActionPressed(const FInputActionValue& Value)
 {
@@ -457,7 +560,7 @@ void ACar::FlipActionPressed(const FInputActionValue& Value)
 {
 	const FRotator Rotation = GetActorRotation();
 	SetActorLocationAndRotation(GetActorLocation() + FVector(0.f, 0.f, 50.f),
-	                            FRotator(0.f, Rotation.Yaw, Rotation.Roll));
+								FRotator(0.f, Rotation.Yaw, Rotation.Roll));
 }
 
 void ACar::JumpActionPressed(const FInputActionValue& Value)
@@ -483,3 +586,6 @@ void ACar::DashActionReleased(const FInputActionValue& Value)
 {
 	bIsDashing = false;
 }
+
+
+#pragma  endregion

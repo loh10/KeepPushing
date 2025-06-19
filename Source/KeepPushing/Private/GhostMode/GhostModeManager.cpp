@@ -45,6 +45,15 @@ void AGhostModeManager::BeginPlay()
 	}
 }
 
+float AGhostModeManager::GetTimeForMap(const FString& MapName) const
+{
+	if (const FTrace* Trace = SaveRacePoints.Find(MapName))
+	{
+		return Trace->Time;
+	}
+	return .0f;
+}
+
 void AGhostModeManager::EndPlayTriggered()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("End Play"));
@@ -102,10 +111,10 @@ void AGhostModeManager::Tick(float DeltaTime)
 		FollowCar(DeltaTime);
 	}
 
-	for (auto& p : _followGhostCarPoint)
-	{
-		DrawDebugLine(GetWorld(), p.Position, p.Position + FVector::UpVector * 100.f, FColor::Red);
-	}
+	// for (auto& p : _followGhostCarPoint)
+	// {
+	// 	DrawDebugLine(GetWorld(), p.Position, p.Position + FVector::UpVector * 100.f, FColor::Red);
+	// }
 }
 
 void AGhostModeManager::FollowCar(const float deltaTime)

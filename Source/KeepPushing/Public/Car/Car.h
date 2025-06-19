@@ -5,6 +5,8 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Car.generated.h"
 
 class UCameraComponent;
@@ -24,6 +26,7 @@ public:
 	void HandleDash();
 	void HandleJump();
 	void StabilizeCar();
+	void PreventRolling();
 	void ApplyHighSpeedForces();
 	void ClampAngularVelocity();
 
@@ -35,7 +38,10 @@ public:
 	void Kill(AActor* victim);
 
 	UFUNCTION(BlueprintCallable, Category = "Car|Runtime")
+
 	void MultiplySpeed(float Factor);
+	UFUNCTION(BlueprintCallable, Category = "Car|Input")
+	void DisableCarInput();
 
 private:
 	void HandleWheelForce(const USceneComponent* CurrentWheel);
@@ -208,6 +214,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Component", meta = (ToolTip = "Static mesh representing the car's chassis."))
 	TObjectPtr<UStaticMeshComponent> Chassie;
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<USceneComponent> DashParticlePos1;
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<USceneComponent> DashParticlePos2;
+	
+	UPROPERTY(EditAnywhere, Category = "VFX", meta = (ToolTip = "Particle emitter for the dash"))
+	TObjectPtr<UNiagaraSystem> DashParticles;
 
 	UPROPERTY(EditAnywhere, meta = (ToolTip = "Force applied when the car jumps."))
 	float JumpForce = 2200000.f;
