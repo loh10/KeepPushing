@@ -457,10 +457,10 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 
 	SteeringInput = Value.Get<float>();
 
-	const float ForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), PlaneVelocity);
-	if (ForwardSpeed < 0.f)
+	// Inverser la direction si l'input d'accélération est négatif (marche arrière)
+	if (AccelerationInput < 0.f)
 	{
-		SteeringInput *= -1.f;
+		SteeringInput = -SteeringInput;
 	}
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||

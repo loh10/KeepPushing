@@ -1,5 +1,6 @@
 ﻿#include "StartAndFinish/StartAndFinish.h"
 
+#include "Car/Car.h"
 #include "Sound/SoundManager.h"
 
 
@@ -59,6 +60,26 @@ void AStartAndFinish::OnTriggerEnter(UPrimitiveComponent* overlappedComponent, A
 				);*/
 			USoundManager::Get(this)->Play2DSound("Win"); //Only for sound testing
 			USoundManager::Get(this)->StopMusic(); //Stops currently playing music
+
+
+
+			// Disable player input if the other actor is a pawn
+
+			if (ACar* Car = Cast<ACar>(otherActor))
+			{
+				Car->DisableCarInput();
+				UE_LOG(LogTemp, Warning, TEXT("Car %s has been disabled."), *Car->GetName());
+			}
+			
+			/*if (ACar* playerPawn = Cast<ACar>(otherActor))
+			{
+				if (APlayerController* PC = Cast<APlayerController>(playerPawn->GetController()))
+				{
+					playerPawn->DisableInput(PC);
+					playerPawn->Reset();
+					UE_LOG(LogTemp, Warning, TEXT("Disable player for  %s"), *playerPawn->GetName());
+				}
+			}*/
 			break;
 
 		default:
