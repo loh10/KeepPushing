@@ -1,4 +1,4 @@
-﻿#include "Car/Car.h"
+#include "Car/Car.h"
 
 #include "Car/CarController.h"
 #include "EnhancedInputSubsystems.h"
@@ -11,6 +11,7 @@
 #include "Traps/DeadlyTraps/SmasherTrap.h"
 #include "Traps/DeadlyTraps/Spike/SpikeComponent.h"
 #include "KeepPushing/Public/LifeZone/LifeZone.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundManager.h"
 
 
@@ -48,6 +49,12 @@ ACar::ACar()
 	SuspensionArray.Add(FR_Wheel);
 	SuspensionArray.Add(BL_Wheel);
 	SuspensionArray.Add(BR_Wheel);
+
+	DashParticlePos1 = CreateDefaultSubobject<UParticleSystemComponent>("DashParticlePos1");
+	DashParticlePos1->SetupAttachment(Box);
+
+	DashParticlePos2 = CreateDefaultSubobject<UParticleSystemComponent>("DashParticlePos2");
+	DashParticlePos2->SetupAttachment(Box);
 }
 
 void ACar::BeginPlay()
@@ -132,6 +139,26 @@ void ACar::HandleDash()
 		bCanDash = false;
 		bHasDashed = true;
 
+		if (DashParticles)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				DashParticles,
+				DashParticlePos1,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true);
+
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				DashParticles,
+				DashParticlePos2,
+				NAME_None,
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::KeepRelativeOffset,
+				true);
+		}
 		USoundManager::Get(this)->Play2DSound("Car_Dash");
 	}
 }
@@ -430,10 +457,10 @@ void ACar::TurnActionTriggered(const FInputActionValue& Value)
 
 	SteeringInput = Value.Get<float>();
 
-	const float ForwardSpeed = UKismetMathLibrary::Dot_VectorVector(Box->GetForwardVector(), PlaneVelocity);
-	if (ForwardSpeed < 0.f)
+	// Inverser la direction si l'input d'accélération est négatif (marche arrière)
+	if (AccelerationInput < 0.f)
 	{
-		SteeringInput *= -1.f;
+		SteeringInput = -SteeringInput;
 	}
 
 	if (UKismetMathLibrary::InRange_FloatFloat(BrakeInput, 0., 1.) ||
