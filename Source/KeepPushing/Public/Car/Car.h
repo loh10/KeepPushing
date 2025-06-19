@@ -26,6 +26,7 @@ public:
 	void HandleDash();
 	void HandleJump();
 	void StabilizeCar();
+	void PreventRolling();
 	void ApplyHighSpeedForces();
 	void ClampAngularVelocity();
 
