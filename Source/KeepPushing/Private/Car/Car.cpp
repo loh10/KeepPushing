@@ -325,7 +325,7 @@ void ACar::CalcDashForce()
 	const float ForwardSpeed = FVector::DotProduct(CurrentVelocity, ForwardVector);
 
 	// Calculez la vitesse de dash en multipliant la vitesse avant par DashMultiplier
-	float DashSpeed = FMath::Max(ForwardSpeed, 0.f) * DashMultiplier;
+	float DashSpeed = FMath::Max(ForwardSpeed,500) * DashMultiplier;
 
 	// Réinitialisez la vitesse actuelle pour éviter les composantes latérales
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
