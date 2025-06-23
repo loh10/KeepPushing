@@ -52,7 +52,7 @@ void AJumperTrap::AffectPlayer(AActor* other)
 		return;
 	
 	FVector impulse = FVector(0.f, 0.f, _jumpForce);
-	rootComp->AddImpulse(impulse, NAME_None, true);
+	rootComp->AddImpulse(impulse*100, NAME_None, true);
 
 	vehicle->bCanDash = false;
 
