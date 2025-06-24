@@ -24,7 +24,7 @@ protected:
 	UStaticMeshComponent* _rightBlock;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
-	float _moveSpeed = 2000.f;
+	float _moveSpeed = 20000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Smasher")
 	float _direction = 1.f;
