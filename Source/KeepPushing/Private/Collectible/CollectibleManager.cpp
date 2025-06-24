@@ -22,7 +22,7 @@ int ACollectibleManager::GetMaxCollectibleForLevel(UWorld* Level)
 
 int ACollectibleManager::GetCollectibleForLevel(UWorld* Level)
 {
-	UCollectibleSave* LoadGameInstance = Cast<UCollectibleSave>(UGameplayStatics::LoadGameFromSlot("GameCollectibleSAver", 1));
+	UCollectibleSave* LoadGameInstance = Cast<UCollectibleSave>(UGameplayStatics::LoadGameFromSlot("GameCollectibleSaver", 1));
 	FCollectibleData Data = LoadGameInstance->SavedCollectionData[Level->GetCurrentLevel()->GetName()];
 	return Data.ActualCollectibles;
 }
@@ -110,7 +110,7 @@ void ACollectibleManager::SaveCollectionData()
 	SaveGameInstance->SavedCollectionData.Add(GetWorld()->GetCurrentLevel()->GetName(), CollectionData);
 
 	// Sauvegarder sur le disque
-	if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, "GameCollectibleSAver", 1))
+	if (UGameplayStatics::SaveGameToSlot(SaveGameInstance, "GameCollectibleSaver", 1))
 	{
 		UE_LOG(LogTemp, Log, TEXT("Données sauvegardées avec succès."));
 	}
@@ -123,7 +123,7 @@ void ACollectibleManager::SaveCollectionData()
 void ACollectibleManager::LoadCollectionData()
 {
     // Charger l'objet de sauvegarde depuis le disque
-    UCollectibleSave* LoadGameInstance = Cast<UCollectibleSave>(UGameplayStatics::LoadGameFromSlot("GameCollectibleSAver", 1));
+    UCollectibleSave* LoadGameInstance = Cast<UCollectibleSave>(UGameplayStatics::LoadGameFromSlot("GameCollectibleSaver", 1));
 
     if (LoadGameInstance)
     {
