@@ -28,7 +28,6 @@ void UEndingUI::BindEndingEvent(const EStartFinishType Type)
     if (Type == EStartFinishType::Finish)
     {
         GetTimer();
-        
     }
 }
 
@@ -52,4 +51,12 @@ void UEndingUI::GetTimer()
     {
         UE_LOG(LogTemp, Error, TEXT("Timer not found!"));
     }
+}
+
+float UEndingUI::GetGameTimer()
+{
+    TArray<AActor*> FoundActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATimer::StaticClass(),FoundActors);
+    Timer = Cast<ATimer>(FoundActors[0]);
+    return Timer->GetElapsed();
 }
