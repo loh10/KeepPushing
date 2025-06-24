@@ -146,6 +146,14 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Car Physics",
 			meta = (ToolTip = "Dash force multiplier"))
 	float DashMultiplier = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+			meta = (ToolTip = "speed of dash force multiplier"))
+	float DashSpeedMultiplier = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Car Physics")
+	float MinDashDist = 5.f;
+
 	UPROPERTY(EditAnywhere, Category = "Forward / Backward",
 		meta = (ToolTip = "Curve defining the available torque based on speed."))
 	TObjectPtr<UCurveFloat> AvailableTorqueCurve;

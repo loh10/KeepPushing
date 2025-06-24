@@ -254,13 +254,11 @@ void ACar::StabilizeCar()
 		Box->AddTorqueInRadians(StabilizingTorque);
 	}
 
-	// Additional: Actively counter roll and pitch
 	FVector AngularVel = Box->GetPhysicsAngularVelocityInRadians();
 
-	// Heavily dampen roll (X-axis) and pitch (Y-axis) rotation
 	FVector CounterTorque = FVector::ZeroVector;
-	CounterTorque.X = -AngularVel.X * 500000.0f; // Anti-roll
-	CounterTorque.Y = -AngularVel.Y * 300000.0f; // Anti-pitch
+	CounterTorque.X = -AngularVel.X * 500000.0f;
+	CounterTorque.Y = -AngularVel.Y * 300000.0f;
 
 	Box->AddTorqueInRadians(CounterTorque);
 }
@@ -286,6 +284,7 @@ void ACar::PreventRolling()
 		Box->AddTorqueInRadians(CorrectiveTorque);
 	}
 }
+
 // Applies forces to stabilize the car at high speeds.
 void ACar::ApplyHighSpeedForces()
 {
@@ -325,14 +324,16 @@ void ACar::CalcDashForce()
 	const float ForwardSpeed = FVector::DotProduct(CurrentVelocity, ForwardVector);
 
 	// Calculez la vitesse de dash en multipliant la vitesse avant par DashMultiplier
-	float DashSpeed = FMath::Max(ForwardSpeed,500) * DashMultiplier;
+	float DashSpeed = FMath::Max(ForwardSpeed,500);
 
 	// Réinitialisez la vitesse actuelle pour éviter les composantes latérales
 	Box->SetAllPhysicsLinearVelocity(FVector::Zero());
 
 
 	// Appliquez la force de dash strictement dans la direction avant
-	const FVector DashForceVector = ForwardVector * DashSpeed;
+	const FVector BaseDashForce = ForwardVector * DashSpeed * DashMultiplier;
+	const FVector MinDash = ForwardVector * DashSpeed ;
+	const FVector DashForceVector= (BaseDashForce.Size() > MinDash.Size()) ? BaseDashForce : MinDash;
 	Box->AddForce(DashForceVector, NAME_None, true);
 }
 
