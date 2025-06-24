@@ -332,7 +332,7 @@ void ACar::CalcDashForce()
 
 	// Appliquez la force de dash strictement dans la direction avant
 	const FVector BaseDashForce = ForwardVector * DashSpeed * DashMultiplier;
-	const FVector MinDash = ForwardVector * DashSpeed ;
+	const FVector MinDash = ForwardVector * DashMultiplier ;
 	const FVector DashForceVector= (BaseDashForce.Size() > MinDash.Size()) ? BaseDashForce : MinDash;
 	Box->AddForce(DashForceVector, NAME_None, true);
 }
