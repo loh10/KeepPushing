@@ -23,8 +23,12 @@ int ACollectibleManager::GetMaxCollectibleForLevel(UWorld* Level)
 int ACollectibleManager::GetCollectibleForLevel(UWorld* Level)
 {
 	UCollectibleSave* LoadGameInstance = Cast<UCollectibleSave>(UGameplayStatics::LoadGameFromSlot("GameCollectibleSaver", 1));
-	FCollectibleData Data = LoadGameInstance->SavedCollectionData[Level->GetCurrentLevel()->GetName()];
-	return Data.ActualCollectibles;
+	if (LoadGameInstance && LoadGameInstance->SavedCollectionData.Contains(Level->GetCurrentLevel()->GetName()))
+	{
+	    FCollectibleData Data = LoadGameInstance->SavedCollectionData[Level->GetCurrentLevel()->GetName()];
+	    return Data.ActualCollectibles;
+	}
+	return 0;
 }
 
 // Called when the game starts or when spawned
@@ -33,8 +37,10 @@ void ACollectibleManager::BeginPlay()
 	Super::BeginPlay();
 
 	UWorld* CurrentLevel = GetWorld();
+
+	RegisterAllCollectibles();
 	
-	if (LevelToIgnoreResearch.Contains(CurrentLevel))
+	if (!LevelToIgnoreResearch.Contains(CurrentLevel))
 	{
 		LoadCollectionData();
 	}
