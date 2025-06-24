@@ -111,10 +111,10 @@ void AGhostModeManager::Tick(float DeltaTime)
 		FollowCar(DeltaTime);
 	}
 
-	for (auto& p : _followGhostCarPoint)
-	{
-		DrawDebugLine(GetWorld(), p.Position, p.Position + FVector::UpVector * 100.f, FColor::Red);
-	}
+	// for (auto& p : _followGhostCarPoint)
+	// {
+	// 	DrawDebugLine(GetWorld(), p.Position, p.Position + FVector::UpVector * 100.f, FColor::Red);
+	// }
 }
 
 void AGhostModeManager::FollowCar(const float deltaTime)

@@ -26,6 +26,7 @@ public:
 	void HandleDash();
 	void HandleJump();
 	void StabilizeCar();
+	void PreventRolling();
 	void ApplyHighSpeedForces();
 	void ClampAngularVelocity();
 
@@ -123,6 +124,9 @@ private:
 		meta = (ToolTip = "Force applied to stabilize the car when it tilts."))
 	float StabilizationForce = 5000.f;
 
+	UPROPERTY(EditAnywhere, Category = "Car")
+	float JumpHeight = 5000.f;
+
 	UPROPERTY(EditAnywhere, Category = "Car Physics",
 		meta = (ToolTip = "Speed threshold above which additional stabilization is applied."))
 	float HighSpeedThreshold = 1000.f;
@@ -139,6 +143,9 @@ private:
 		meta = (ToolTip = "Maximum angular velocity allowed to prevent flipping."))
 	float MaxAngularVelocity = 5.f;
 
+	UPROPERTY(EditAnywhere, Category = "Car Physics",
+			meta = (ToolTip = "Dash force multiplier"))
+	float DashMultiplier = 5.f;
 	UPROPERTY(EditAnywhere, Category = "Forward / Backward",
 		meta = (ToolTip = "Curve defining the available torque based on speed."))
 	TObjectPtr<UCurveFloat> AvailableTorqueCurve;
