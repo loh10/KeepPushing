@@ -21,6 +21,9 @@ public:
 	UFUNCTION()
 	void GetTimer();
 
+	UFUNCTION(BlueprintCallable, Category = "EndingUI")
+	float GetGameTimer();	
+
 	UFUNCTION()
 	void BindEndingEvent(const EStartFinishType Type);
 	
