@@ -46,6 +46,9 @@ void USoundManager::Initialize(FSubsystemCollectionBase& Collection)
 	if (Save)
 	{
 		Volume = Save->MasterVolume;
+	} else
+	{
+		SaveVolumeToDisk();
 	}
 
 	SetMasterVolume(Volume);
