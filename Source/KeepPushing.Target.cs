@@ -8,8 +8,13 @@ public class KeepPushingTarget : TargetRules
 	public KeepPushingTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
-		DefaultBuildSettings = BuildSettingsVersion.V5;
 
-		ExtraModuleNames.AddRange( new string[] { "KeepPushing" } );
+		DefaultBuildSettings = BuildSettingsVersion.V6;
+
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
+
+		bOverrideBuildEnvironment = true;
+
+		ExtraModuleNames.AddRange(new string[] { "KeepPushing" });
 	}
 }
